@@ -1,0 +1,31 @@
+<variant
+    name="release"
+    package="io.flutter.plugins.firebase.analytics"
+    minSdkVersion="21"
+    targetSdkVersion="21"
+    mergedManifest="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml"
+    manifestMergeReport="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/outputs/logs/manifest-merger-release-report.txt"
+    proguardFiles="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0"
+    partialResultsDir="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/intermediates/lint_partial_results/release/lintAnalyzeRelease/out">
+  <buildFeatures
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="src/main/AndroidManifest.xml"
+        javaDirectories="src/main/java:src/main/kotlin:src/release/java:src/release/kotlin"
+        resDirectories="src/main/res:src/release/res"
+        assetsDirectories="src/main/assets:src/release/assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <artifact
+      classOutputs="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/intermediates/javac/release/compileReleaseJavaWithJavac/classes:/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/tmp/kotlin-classes/release:/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/intermediates/compile_r_class_jar/release/generateReleaseRFile/R.jar"
+      type="MAIN"
+      applicationId="io.flutter.plugins.firebase.analytics"
+      generatedSourceFolders="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/generated/ap_generated_sources/release/out:/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/generated/source/buildConfig/release"
+      generatedResourceFolders="/Users/khaianh/development/project/notification_vtcnews/build/firebase_analytics/generated/res/resValues/release"
+      desugaredMethodsFiles="/Users/khaianh/.gradle/caches/8.10.2/transforms/f94cbc3ce0cf0154dfeecf6e7aa64b78/transformed/D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>

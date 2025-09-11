@@ -1,0 +1,58 @@
+[
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-mdpi_launcher_icon.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-mdpi/launcher_icon.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-xxxhdpi_launcher_icon.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-xxxhdpi/launcher_icon.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/xml_network_security_config.xml.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-xxhdpi_launcher_icon.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-xxhdpi/launcher_icon.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/drawable-v21_launch_background.xml.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/drawable-v21/launch_background.xml"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-hdpi_launcher_icon.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-hdpi/launcher_icon.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/drawable_ic_stat_notification.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/drawable/ic_stat_notification.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/mipmap-xhdpi_launcher_icon.png.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/mipmap-xhdpi/launcher_icon.png"
+    },
+    {
+        "merged": "com.example.notification_vtcnews.app-debug-53:/drawable_ic_stat_notification2.xml.flat",
+        "source": "com.example.notification_vtcnews.app-main-47:/drawable/ic_stat_notification2.xml"
+    }
+]

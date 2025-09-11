@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.notification_vtcnews.app-mergeReleaseResources-51:/values-port/values-port.xml",
+            "map": [
+                {
+                    "source": "/Users/khaianh/.gradle/caches/8.10.2/transforms/3c06053a9d4e96c0a6176d0e8a20a1c9/transformed/appcompat-1.1.0/res/values-port/values-port.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}

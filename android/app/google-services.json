@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "187572265906",
+    "project_id": "vtcnewspwa",
+    "storage_bucket": "vtcnewspwa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:187572265906:android:5aee7646541fc75234baab",
+        "android_client_info": {
+          "package_name": "com.example.notification_vtcnews"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCODALcr8vJ-e3EOTOn-u4IiMPhwSR3sDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

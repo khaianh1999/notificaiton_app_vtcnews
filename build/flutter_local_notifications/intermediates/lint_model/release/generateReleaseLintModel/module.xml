@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="/Users/khaianh/.pub-cache/hosted/pub.dev/flutter_local_notifications-17.2.4/android"
+    name=":flutter_local_notifications"
+    type="LIBRARY"
+    maven="com.dexterous.flutterlocalnotifications:flutter_local_notifications:1.0-SNAPSHOT"
+    agpVersion="8.7.0"
+    buildFolder="/Users/khaianh/development/project/notification_vtcnews/build/flutter_local_notifications"
+    bootClassPath="/Users/khaianh/Library/Android/sdk/platforms/android-34/android.jar:/Users/khaianh/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

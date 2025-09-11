@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyC7Ofzrm0iKGDnEO2MJOLxZ84lbQI5cuTE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>187572265906</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.khaianh.vtcnewsApp2</string>
+	<key>PROJECT_ID</key>
+	<string>vtcnewspwa</string>
+	<key>STORAGE_BUCKET</key>
+	<string>vtcnewspwa.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:187572265906:ios:11a266a1610f96b134baab</string>
+</dict>
+</plist>

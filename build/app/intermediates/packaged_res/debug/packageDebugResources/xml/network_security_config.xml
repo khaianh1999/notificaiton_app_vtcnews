@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Cho phép HTTP cho domain chính -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">api.vtcnews.vn</domain>
+    </domain-config>
+
+    <!-- Cho phép HTTP cho mọi địa chỉ (dùng để test hoặc IP LAN như 192.168.x.x) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">192.168.0.0</domain>
+        <domain includeSubdomains="true">192.168.1.0</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Emulator -->
+    </domain-config>
+</network-security-config>
