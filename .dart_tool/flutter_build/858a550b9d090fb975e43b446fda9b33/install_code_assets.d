@@ -1,1 +1,0 @@
- /Users/khaianh/development/project/notificaiton_app_vtcnews/.dart_tool/flutter_build/858a550b9d090fb975e43b446fda9b33/native_assets.json: 
