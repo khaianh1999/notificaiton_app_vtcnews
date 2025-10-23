@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:notification_vtcnews/data/models/home_model.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -10,7 +11,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:notification_vtcnews/font_size_provider.dart';
 import 'package:notification_vtcnews/data/notifiers.dart';
-import 'package:notification_vtcnews/data/home_cache.dart';
 import 'package:notification_vtcnews/notification_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,40 +34,7 @@ class NewsImageCache {
 }
 
 /// Model cho notification item
-class NotificationItem {
-  final int id;
-  final String title;
-  final String message;
-  final String link;
-  final DateTime createdAt;
-  final String titleTask;
 
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.link,
-    required this.createdAt,
-    required this.titleTask,
-  });
-
-  factory NotificationItem.fromJson(Map<String, dynamic> json) {
-    // CreatedAt trả về dạng /Date(1747042745987)/ → cần parse số timestamp
-    final rawDate = json["CreatedAt"] as String;
-    final timestamp =
-        int.tryParse(rawDate.replaceAll(RegExp(r'[^0-9]'), "")) ?? 0;
-    final createdAt = DateTime.fromMillisecondsSinceEpoch(timestamp);
-
-    return NotificationItem(
-      id: json["ID"] ?? 0,
-      title: json["Title"] ?? "",
-      message: json["Message"] ?? "",
-      link: json["Link"] ?? "",
-      createdAt: createdAt,
-      titleTask: json["title_task"] ?? "",
-    );
-  }
-}
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin<HomePage> {
@@ -112,9 +79,10 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  Future<void> _saveEmail(String email) async {
+  Future<void> _saveEmail(String email, int departmentId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user_email", email);
+    await prefs.setInt("departmentId", departmentId);
     setState(() {
       _savedEmail = email;
     });
@@ -132,10 +100,10 @@ class _HomePageState extends State<HomePage>
 
     setState(() => _isSubmitting = true);
     try {
-      final ok = await NotificationService.instance.sendTokenToServer(email);
+      final data = await NotificationService.instance.sendTokenToServer(email);
 
-      if (ok) {
-        await _saveEmail(email);
+      if (data != null && data["success"] == true) {
+        await _saveEmail(email, data["departmentId"]);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Cập nhật token thành công!")),
         );

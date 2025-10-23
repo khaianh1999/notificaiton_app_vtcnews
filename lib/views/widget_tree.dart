@@ -1,8 +1,13 @@
 // lib/views/widget_tree.dart
+import 'package:notification_vtcnews/main.dart';
+import 'package:notification_vtcnews/views/pages/my_group.dart';
+import 'widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/home_page.dart';
 import '../data/notifiers.dart';
+import 'pages/my_task.dart';
+import 'pages/my_group.dart';
 // REMOVE the Firebase import as it's no longer needed here
 // import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -33,7 +38,12 @@ class _WidgetTreeState extends State<WidgetTree> {
     super.initState();
 
     // The HomePage no longer needs the initialMessage
-    _pages = [HomePage()];
+    _pages = [
+      HomePage(),
+      MyTask(),
+      MyGroup(),
+
+    ];
 
     _pageCtrl = PageController(initialPage: selectedPageNotifier.value);
   }
@@ -84,6 +94,7 @@ class _WidgetTreeState extends State<WidgetTree> {
         onPageChanged: (idx) => selectedPageNotifier.value = idx,
         children: _pages,
       ),
+      bottomNavigationBar: NavBarWidget(controller: _pageCtrl ),
     );
   }
 }

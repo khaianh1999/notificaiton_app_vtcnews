@@ -54,26 +54,16 @@ class NavBarWidget extends StatelessWidget {
                 activeIcon: Icon(Icons.home),
                 label: 'Trang chủ',
               ),
-              // BottomNavigationBarItem(
-              //   icon: Icon(Icons.podcasts_outlined),
-              //   activeIcon: Icon(Icons.podcasts),
-              //   label: 'Podcast',
-              // ),
-              // BottomNavigationBarItem(
-              //   icon: Icon(Icons.video_collection_outlined),
-              //   activeIcon: Icon(Icons.video_collection),
-              //   label: 'Reels',
-              // ),
-              // BottomNavigationBarItem(
-              //   icon: Icon(Icons.extension_outlined),
-              //   activeIcon: Icon(Icons.extension),
-              //   label: 'Tiện ích',
-              // ),
-              // BottomNavigationBarItem(
-              //   icon: Icon(Icons.menu_outlined),
-              //   activeIcon: Icon(Icons.menu),
-              //   label: 'Menu',
-              // ),
+               BottomNavigationBarItem(
+                icon: Icon(Icons.playlist_add_check_outlined),
+               activeIcon: Icon(Icons.playlist_add_check),
+                 label: 'MyTask',
+               ),
+               BottomNavigationBarItem(
+                 icon: Icon(Icons.playlist_add_check_outlined),
+                 activeIcon: Icon(Icons.playlist_add_check),
+                 label: 'My Group',
+               ),
             ],
           );
         },

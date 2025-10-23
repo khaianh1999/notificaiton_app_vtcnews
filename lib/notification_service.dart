@@ -164,13 +164,13 @@ class NotificationService {
     FirebaseMessaging.instance.onTokenRefresh.listen(onRefresh);
   }
 
-  Future<bool> sendTokenToServer(String email) async {
+  Future<Map<String, dynamic>?> sendTokenToServer(String email) async {
     try {
       final fcmToken = await FirebaseMessaging.instance.getToken();
 
       if (fcmToken == null) {
         print("⚠️ Không lấy được FCM token");
-        return false;
+        return null;
       }
 
       final url = Uri.parse("https://work.vtcnews.vn/User/UpdateTokenDevice");
@@ -188,18 +188,18 @@ class NotificationService {
 
         if (data["success"] == true) {
           print("✅ ${data["message"]}");
-          return true;
+          return data;
         } else {
           print("⚠️ ${data["message"]}");
-          return false;
+          return null;
         }
       } else {
         print("⚠️ Lỗi HTTP: ${res.statusCode}");
-        return false;
+        return null;
       }
     } catch (e) {
       print("❌ Exception khi gửi email/token: $e");
-      return false;
+      return null;
     }
   }
 }
