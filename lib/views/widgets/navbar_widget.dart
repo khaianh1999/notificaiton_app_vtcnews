@@ -52,7 +52,7 @@ class NavBarWidget extends StatelessWidget {
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
                 activeIcon: Icon(Icons.home),
-                label: 'Trang chủ',
+                label: 'Home',
               ),
                BottomNavigationBarItem(
                 icon: Icon(Icons.playlist_add_check_outlined),
@@ -63,6 +63,11 @@ class NavBarWidget extends StatelessWidget {
                  icon: Icon(Icons.playlist_add_check_outlined),
                  activeIcon: Icon(Icons.playlist_add_check),
                  label: 'My Group',
+               ),
+               BottomNavigationBarItem(
+                 icon: Icon(Icons.bar_chart_rounded),
+                 activeIcon: Icon(Icons.bar_chart_rounded),
+                 label: 'Dashboard',
                ),
             ],
           );

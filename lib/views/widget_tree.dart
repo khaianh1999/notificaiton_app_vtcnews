@@ -1,6 +1,7 @@
 // lib/views/widget_tree.dart
 import 'package:notification_vtcnews/main.dart';
 import 'package:notification_vtcnews/views/pages/my_group.dart';
+import 'package:notification_vtcnews/views/pages/my_statistical.dart';
 import 'widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -42,7 +43,7 @@ class _WidgetTreeState extends State<WidgetTree> {
       HomePage(),
       MyTask(),
       MyGroup(),
-
+      TaskStatisticsScreen(),
     ];
 
     _pageCtrl = PageController(initialPage: selectedPageNotifier.value);
