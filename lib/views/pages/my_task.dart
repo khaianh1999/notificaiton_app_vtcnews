@@ -480,7 +480,7 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            height: 56,
+                            height: 45,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -609,7 +609,7 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            height: 56,
+                            height: 45,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [

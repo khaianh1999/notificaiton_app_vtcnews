@@ -124,20 +124,20 @@ class TaskItem extends StatelessWidget {
                         //     : null,
                       ),
                     ),
-                    if (task.description != null &&
-                        task.description!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          task.description!,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                    // if (task.description != null &&
+                    //     task.description!.isNotEmpty)
+                    //   Padding(
+                    //     padding: const EdgeInsets.only(top: 4),
+                    //     child: Text(
+                    //       task.description!,
+                    //       style: TextStyle(
+                    //         fontSize: 18,
+                    //         color: Colors.grey[600],
+                    //       ),
+                    //       maxLines: 2,
+                    //       overflow: TextOverflow.ellipsis,
+                    //     ),
+                    //   ),
 
                     Padding(
                       padding: const EdgeInsets.only(top: 4),

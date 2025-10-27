@@ -62,18 +62,18 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Thanh tiêu đề trên cùng
-      appBar: AppBar(
-        title: const Text(
-          "Thống kê công việc",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: Colors.red,
-        centerTitle: true,
-      ),
+      // appBar: AppBar(
+      //   title: const Text(
+      //     "Thống kê công việc",
+      //     style: TextStyle(
+      //       color: Colors.white,
+      //       fontWeight: FontWeight.bold,
+      //       fontSize: 20,
+      //     ),
+      //   ),
+      //   backgroundColor: Colors.red,
+      //   centerTitle: true,
+      // ),
 
       // Nội dung chính của trang
       body: Column(
@@ -162,7 +162,7 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
           const SizedBox(height: 6),
 
           // Các dòng thống kê chi tiết
-          _buildStatLine("Tổng công việc", total, Icons.all_inclusive, Colors.black87),
+          _buildStatLine("Tổng", total, Icons.all_inclusive, Colors.black87),
           _buildStatLine("Chờ", todo, Icons.hourglass_empty, Colors.grey),
           _buildStatLine("Đang làm", inProgress, Icons.work, Colors.blue),
           _buildStatLine("Đã làm xong", done, Icons.done, Colors.green),
@@ -280,7 +280,7 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 48,
+        height: 45,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.red.withOpacity(0.1), Colors.red.withOpacity(0.2)],

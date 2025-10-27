@@ -61,39 +61,41 @@ class _WidgetTreeState extends State<WidgetTree> {
     final showBack = pageIdx == 2 && _itemsCanGoBack;
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Image.asset('assets/images/logo.webp', height: 25),
-        leading:
-            showBack
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () async {
-                    if (_itemsWebController != null &&
-                        await _itemsWebController!.canGoBack()) {
-                      await _itemsWebController!.goBack();
-                    }
-                  },
-                )
-                : const SizedBox.shrink(),
-        actions: [
-          IconButton(
-            icon: ValueListenableBuilder(
-              valueListenable: isDarkModeNotifier,
-              builder:
-                  (_, isDark, __) =>
-                      Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-            ),
-            onPressed:
-                () => isDarkModeNotifier.value = !isDarkModeNotifier.value,
-          ),
-        ],
-      ),
-      body: PageView(
-        controller: _pageCtrl,
-        physics: NeverScrollableScrollPhysics(),
-        onPageChanged: (idx) => selectedPageNotifier.value = idx,
-        children: _pages,
+      // appBar: AppBar(
+      //   centerTitle: true,
+      //   title: Image.asset('assets/images/logo.webp', height: 25),
+      //   leading:
+      //       showBack
+      //           ? IconButton(
+      //             icon: const Icon(Icons.arrow_back),
+      //             onPressed: () async {
+      //               if (_itemsWebController != null &&
+      //                   await _itemsWebController!.canGoBack()) {
+      //                 await _itemsWebController!.goBack();
+      //               }
+      //             },
+      //           )
+      //           : const SizedBox.shrink(),
+      //   actions: [
+      //     IconButton(
+      //       icon: ValueListenableBuilder(
+      //         valueListenable: isDarkModeNotifier,
+      //         builder:
+      //             (_, isDark, __) =>
+      //                 Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+      //       ),
+      //       onPressed:
+      //           () => isDarkModeNotifier.value = !isDarkModeNotifier.value,
+      //     ),
+      //   ],
+      // ),
+      body: SafeArea(
+        child: PageView(
+          controller: _pageCtrl,
+          physics: NeverScrollableScrollPhysics(),
+          onPageChanged: (idx) => selectedPageNotifier.value = idx,
+          children: _pages,
+        ),
       ),
       bottomNavigationBar: NavBarWidget(controller: _pageCtrl ),
     );

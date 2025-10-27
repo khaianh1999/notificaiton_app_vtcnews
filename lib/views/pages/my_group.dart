@@ -482,7 +482,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            height: 56,
+                            height: 45,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -516,7 +516,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                                       ? 'Tháng $_selectedMonth'
                                       : 'Chọn tháng',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontFamily: 'Poppins',
                                     fontWeight: FontWeight.w600,
                                     color: Colors.red,
@@ -580,7 +580,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                                                   '$year',
                                                   style: const TextStyle(
                                                     fontFamily: 'Poppins',
-                                                    fontSize: 14,
+                                                    fontSize: 12,
                                                     color: Colors.red,
                                                     fontWeight: FontWeight.w600,
                                                   ),
@@ -611,7 +611,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            height: 56,
+                            height: 45,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -637,7 +637,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                                 const Icon(
                                   Icons.calendar_today,
                                   color: Colors.red,
-                                  size: 20,
+                                  size: 12,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
