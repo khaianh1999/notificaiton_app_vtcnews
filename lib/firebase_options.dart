@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '187572265906',
     projectId: 'vtcnewspwa',
     storageBucket: 'vtcnewspwa.firebasestorage.app',
-    iosBundleId: 'com.khaianh.vtcnewsApp2',
+    iosBundleId: 'com.vtcnews.notifications',
   );
 }
