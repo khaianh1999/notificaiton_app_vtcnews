@@ -149,7 +149,7 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
           const SizedBox(height: 6),
 
           // Các dòng thống kê chi tiết
-          _buildStatLine("Tổng công việc", total, Icons.all_inclusive, Colors.black87),
+          _buildStatLine("Tổng", total, Icons.all_inclusive, Colors.black87),
           _buildStatLine("Chờ", todo, Icons.hourglass_empty, Colors.grey),
           _buildStatLine("Đang làm", inProgress, Icons.work, Colors.blue),
           _buildStatLine("Đã làm xong", done, Icons.done, Colors.green),
