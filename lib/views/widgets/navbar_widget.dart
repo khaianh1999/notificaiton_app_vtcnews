@@ -62,7 +62,7 @@ class NavBarWidget extends StatelessWidget {
                BottomNavigationBarItem(
                  icon: Icon(Icons.playlist_add_check_outlined),
                  activeIcon: Icon(Icons.playlist_add_check),
-                 label: 'My Group',
+                 label: 'MyGroup',
                ),
                BottomNavigationBarItem(
                  icon: Icon(Icons.bar_chart_rounded),

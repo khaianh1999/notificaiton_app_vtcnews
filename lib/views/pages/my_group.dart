@@ -407,71 +407,62 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                           onTap: () async {
                             final selectedMonth = await showDialog<int>(
                               context: context,
-                              builder:
-                                  (context) => AlertDialog(
-                                    title: const Text(
-                                      'Chọn tháng',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    content: SizedBox(
-                                      width: 300,
-                                      height: 250,
-                                      child: GridView.count(
-                                        crossAxisCount: 4,
-                                        mainAxisSpacing: 8,
-                                        crossAxisSpacing: 8,
-                                        children: List.generate(12, (index) {
-                                          final month = index + 1;
-                                          return GestureDetector(
-                                            onTap:
-                                                () => Navigator.pop(
-                                                  context,
-                                                  month,
-                                                ),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    month == _selectedMonth
-                                                        ? Colors.red
-                                                            .withOpacity(0.2)
-                                                        : Colors.grey
-                                                            .withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: Border.all(
-                                                  color: Colors.red,
-                                                  width: 0,
-                                                ),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  '$month',
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Poppins',
-                                                    fontSize: 14,
-                                                    color: Colors.red,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
+                              builder: (context) => AlertDialog(
+                                title: const Text(
+                                  'Chọn tháng',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                content: SizedBox(
+                                  width: 300,
+                                  height: 250,
+                                  child: GridView.count(
+                                    crossAxisCount: 4,
+                                    mainAxisSpacing: 8,
+                                    crossAxisSpacing: 8,
+                                    children: List.generate(12, (index) {
+                                      final month = index + 1;
+                                      return GestureDetector(
+                                        onTap: () => Navigator.pop(context, month),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: month == _selectedMonth
+                                                ? Colors.red.withOpacity(0.2)
+                                                : Colors.grey.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: Colors.red,
+                                              width: 0,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              '$month',
+                                              style: const TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
-                                          );
-                                        }),
-                                      ),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text(
-                                          'Hủy',
-                                          style: TextStyle(color: Colors.red),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    }),
                                   ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      'Hủy',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                             if (selectedMonth != null && mounted) {
                               setState(() {
@@ -516,7 +507,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                                       ? 'Tháng $_selectedMonth'
                                       : 'Chọn tháng',
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontFamily: 'Poppins',
                                     fontWeight: FontWeight.w600,
                                     color: Colors.red,
@@ -535,72 +526,62 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                           onTap: () async {
                             final selectedYear = await showDialog<int>(
                               context: context,
-                              builder:
-                                  (context) => AlertDialog(
-                                    title: const Text(
-                                      'Chọn năm',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    content: SizedBox(
-                                      width: 300,
-                                      height: 200,
-                                      child: GridView.count(
-                                        crossAxisCount: 4,
-                                        mainAxisSpacing: 8,
-                                        crossAxisSpacing: 8,
-                                        children: List.generate(5, (index) {
-                                          final year =
-                                              DateTime.now().year + index;
-                                          return GestureDetector(
-                                            onTap:
-                                                () => Navigator.pop(
-                                                  context,
-                                                  year,
-                                                ),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    year == _selectedYear
-                                                        ? Colors.red
-                                                            .withOpacity(0.2)
-                                                        : Colors.grey
-                                                            .withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: Border.all(
-                                                  color: Colors.red,
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  '$year',
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Poppins',
-                                                    fontSize: 12,
-                                                    color: Colors.red,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
+                                 builder: (context) => AlertDialog(
+                                title: const Text(
+                                  'Chọn năm',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                content: SizedBox(
+                                  width: 300,
+                                  height: 200,
+                                  child: GridView.count(
+                                    crossAxisCount: 4,
+                                    mainAxisSpacing: 8,
+                                    crossAxisSpacing: 8,
+                                    children: List.generate(5, (index) {
+                                      final year = DateTime.now().year + index;
+                                      return GestureDetector(
+                                        onTap: () => Navigator.pop(context, year),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: year == _selectedYear
+                                                ? Colors.red.withOpacity(0.2)
+                                                : Colors.grey.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: Colors.red,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              '$year',
+                                              style: const TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
-                                          );
-                                        }),
-                                      ),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text(
-                                          'Hủy',
-                                          style: TextStyle(color: Colors.red),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    }),
                                   ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      'Hủy',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                             if (selectedYear != null && mounted) {
                               setState(() {
@@ -637,7 +618,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                                 const Icon(
                                   Icons.calendar_today,
                                   color: Colors.red,
-                                  size: 12,
+                                  size: 20,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -661,7 +642,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                       // Expanded(
                       //   flex: 1,
                       //   child: SizedBox(
-                      //     height: 56,
+                      //     height: 45,
                       //     child: ElevatedButton(
                       //       onPressed: _showAddTaskDialog,
                       //       style: ElevatedButton.styleFrom(
@@ -720,7 +701,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                           _buildStatCard(
                             'Tất cả',
                             _tasks.length,
-                            Colors.blue.shade600,
+                            Colors.black,
                             TaskFilter.all,
                           ),
                           _buildStatCard(
@@ -736,7 +717,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                             _tasks
                                 .where((t) => t.status == TaskStatus.inProgress)
                                 .length,
-                            Colors.red,
+                            Colors.blue,
                             TaskFilter.inProgress,
                           ),
                           _buildStatCard(
@@ -785,44 +766,26 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 10),
                   // Tasks List
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.60,
-                    child:
-                        filteredTasks.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.builder(
-                              key: ValueKey(
-                                '${_filter}_${_selectedMonth}_${_selectedYear}',
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              itemCount: filteredTasks.length,
-                              itemBuilder: (context, index) {
-                                final task = filteredTasks[index];
-                                return TweenAnimationBuilder<double>(
-                                  key: ValueKey(task.id),
-                                  tween: Tween(begin: 0, end: 1),
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.decelerate,
-                                  builder:
-                                      (context, value, child) => Opacity(
-                                        opacity: value,
-                                        child: Transform.translate(
-                                          offset: Offset(50 * (1 - value), 0),
-                                          child: child,
-                                        ),
-                                      ),
-                                  child: TaskItem(
-                                    key: ValueKey(task.id),
-                                    task: task,
-                                    onTap: () => _openLink(task.id),
-                                  ),
-                                );
-                              },
-                            ),
-                  ),
+                   // Tasks List: Tự co giãn với shrinkWrap
+                  filteredTasks.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          shrinkWrap: true, // Tự co giãn theo nội dung
+                          physics: const NeverScrollableScrollPhysics(), // Tắt cuộn nội bộ, dùng cha để cuộn
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          itemCount: filteredTasks.length,
+                          itemBuilder: (context, index) {
+                            final task = filteredTasks[index];
+                            return TaskItem(
+                              key: ValueKey(task.id),
+                              task: task,
+                              onTap: () => _openLink(task.id),
+                            );
+                          },
+                        ),
                 ],
               ),
             ),
@@ -870,7 +833,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
       },
       child: Container(
         // Hiển thị lọc trạng thái
-        width: 80,
+        width: 100,
         margin: const EdgeInsets.symmetric(horizontal: 0),
         child: Card(
           elevation: 1,
