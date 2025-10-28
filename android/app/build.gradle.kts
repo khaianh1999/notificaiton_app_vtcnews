@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.notification_vtcnews"
+    namespace = "com.vtcnews.notifications"
     compileSdk = flutter.compileSdkVersion
 
     ndkVersion = "27.0.12077973"
@@ -28,7 +28,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.notification_vtcnews"
+        applicationId = "com.vtcnews.notifications"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

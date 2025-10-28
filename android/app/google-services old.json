@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:187572265906:android:5aee7646541fc75234baab",
         "android_client_info": {
-          "package_name": "com.example.notification_vtcnews"
+          "package_name": "com.vtcnews.notifications"
         }
       },
       "oauth_client": [],
