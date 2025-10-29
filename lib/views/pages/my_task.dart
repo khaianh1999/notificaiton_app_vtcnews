@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:notification_vtcnews/data/models/task_mode.dart'; // Đã sửa
-import 'package:notification_vtcnews/views/widgets/task_detaildialong.dart'; // Đã sửa
+import 'package:notification_vtcnews/data/models/task_mode.dart';
+import 'package:notification_vtcnews/views/widgets/task_detaildialong.dart';
 import 'package:notification_vtcnews/views/widgets/task_item_widget.dart';
 import 'package:notification_vtcnews/data/repositories/add_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,7 +84,7 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
       await _saveEmail(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Đã lưu email thành công!")),
+          const SnackBar(content: Text("Đã lưu email thành công!")),
         );
       }
     } catch (e) {
@@ -115,8 +115,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
       if (response.statusCode == 200 && mounted) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success'] == true) {
-          // final prefs = await SharedPreferences.getInstance();
-          // await prefs.setString("departmentId", jsonData['departmentId']);  
           final List<dynamic> tasksList = jsonData['data'];
           setState(() {
             _tasks.clear();
@@ -124,9 +122,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
               tasksList.map((json) => TaskModel.fromJson(json)).toList(),
             );
           });
-          print(
-            'Loaded tasks from API: ${_tasks.length}, Titles: ${_tasks.map((t) => t.title).toList()}',
-          );
         } else {
           throw Exception('API returned success: false');
         }
@@ -139,7 +134,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Lỗi khi tải công việc: $e')));
-        // Fallback to sample data
         setState(() {
           _tasks.clear();
         });
@@ -158,9 +152,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         _tasks.map((task) => task.toJson()).toList(),
       );
       await prefs.setString('tasks', tasksJson);
-      print(
-        'Saved tasks: ${_tasks.length}, Titles: ${_tasks.map((t) => t.title).toList()}',
-      );
     } catch (e) {
       print('Error saving tasks: $e');
     }
@@ -177,7 +168,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         );
       });
       Future.microtask(_saveTasks);
-      print('Added task: ${task.title}, Total tasks: ${_tasks.length}');
     }
   }
 
@@ -195,7 +185,7 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('✅ Đã cập nhật công việc'),
+              content: Text('Đã cập nhật công việc'),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 2),
             ),
@@ -228,11 +218,7 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         opacity: animation,
         child: SizeTransition(
           sizeFactor: animation,
-          child: TaskItem(
-            key: ValueKey(task.id),
-            task: task,
-            onTap: () {},
-          ),
+          child: TaskItem(key: ValueKey(task.id), task: task, onTap: () {}),
         ),
       ),
     );
@@ -273,12 +259,8 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
   }
 
   List<TaskModel> _getFilteredTasks() {
-    print(
-      'Filter: $_filter, Tasks: ${_tasks.length}, Titles: ${_tasks.map((t) => t.title).toList()}',
-    );
     List<TaskModel> filtered = _tasks;
 
-    // Lọc theo trạng thái
     switch (_filter) {
       case TaskFilter.all:
         break;
@@ -318,16 +300,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         break;
     }
 
-    // Lọc theo tháng và năm (đã được API xử lý, nhưng giữ để đảm bảo)
-    if (_selectedMonth != null) {
-      filtered =
-          filtered.where((task) => task.date.month == _selectedMonth).toList();
-    }
-    if (_selectedYear != null) {
-      filtered =
-          filtered.where((task) => task.date.year == _selectedYear).toList();
-    }
-
     return filtered;
   }
 
@@ -349,340 +321,394 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final filteredTasks = _getFilteredTasks();
-    print(
-      'Filtered tasks: ${filteredTasks.length}, Titles: ${filteredTasks.map((t) => t.title).toList()}',
-    );
 
     return Scaffold(
       body: Stack(
         children: [
-          SingleChildScrollView( // Cuộn toàn bộ nội dung
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column( // Column tự co giãn theo con
-                children: [
-                  // Phần chọn tháng/năm (giữ nguyên)
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: GestureDetector(
-                          onTap: () async {
-                            final selectedMonth = await showDialog<int>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text(
-                                  'Chọn tháng',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                content: SizedBox(
-                                  width: 300,
-                                  height: 250,
-                                  child: GridView.count(
-                                    crossAxisCount: 4,
-                                    mainAxisSpacing: 8,
-                                    crossAxisSpacing: 8,
-                                    children: List.generate(12, (index) {
-                                      final month = index + 1;
-                                      return GestureDetector(
-                                        onTap: () => Navigator.pop(context, month),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: month == _selectedMonth
-                                                ? Colors.red.withOpacity(0.2)
-                                                : Colors.grey.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(
-                                              color: Colors.red,
-                                              width: 0,
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '$month',
-                                              style: const TextStyle(
-                                                fontFamily: 'Poppins',
-                                                fontSize: 14,
-                                                color: Colors.red,
-                                                fontWeight: FontWeight.w600,
+          // === TOÀN BỘ GIAO DIỆN ===
+          Column(
+            children: [
+              // === PHẦN CỐ ĐỊNH TRÊN CÙNG ===
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                child: Column(
+                  children: [
+                    // Chọn tháng/năm
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final selectedMonth = await showDialog<int>(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: const Text(
+                                        'Chọn tháng',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      content: SizedBox(
+                                        width: 300,
+                                        height: 250,
+                                        child: GridView.count(
+                                          crossAxisCount: 4,
+                                          mainAxisSpacing: 8,
+                                          crossAxisSpacing: 8,
+                                          children: List.generate(12, (index) {
+                                            final month = index + 1;
+                                            return GestureDetector(
+                                              onTap:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                    month,
+                                                  ),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      month == _selectedMonth
+                                                          ? Colors.red
+                                                              .withOpacity(0.2)
+                                                          : Colors.grey
+                                                              .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: Colors.red,
+                                                    width: 0,
+                                                  ),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    '$month',
+                                                    style: const TextStyle(
+                                                      fontFamily: 'Poppins',
+                                                      fontSize: 14,
+                                                      color: Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                            );
+                                          }),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: const Text(
+                                            'Hủy',
+                                            style: TextStyle(color: Colors.red),
                                           ),
                                         ),
-                                      );
-                                    }),
-                                  ),
+                                      ],
+                                    ),
+                              );
+                              if (selectedMonth != null && mounted) {
+                                setState(() {
+                                  _selectedMonth = selectedMonth;
+                                  _filter =
+                                      TaskFilter.all; // ✅ reset tab về “Tất cả”
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _scrollToSelectedFilter(
+                                    TaskFilter.all,
+                                  ); // ✅ cuộn về tab “Tất cả”
+                                });
+                                await _loadTasks();
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              height: 30,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.red.withOpacity(0.1),
+                                    Colors.red.withOpacity(0.2),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text(
-                                      'Hủy',
-                                      style: TextStyle(color: Colors.red),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.red,
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.red.withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_month,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _selectedMonth != null
+                                        ? 'Tháng $_selectedMonth'
+                                        : 'Chọn tháng',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red,
                                     ),
                                   ),
                                 ],
                               ),
-                            );
-                            if (selectedMonth != null && mounted) {
-                              setState(() {
-                                _selectedMonth = selectedMonth;
-                              });
-                              await _loadTasks();
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            height: 45,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.red.withOpacity(0.1),
-                                  Colors.red.withOpacity(0.2),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.red, width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.withOpacity(0.2),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.calendar_month,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _selectedMonth != null
-                                      ? 'Tháng $_selectedMonth'
-                                      : 'Chọn tháng',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: GestureDetector(
-                          onTap: () async {
-                            final selectedYear = await showDialog<int>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text(
-                                  'Chọn năm',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                content: SizedBox(
-                                  width: 300,
-                                  height: 200,
-                                  child: GridView.count(
-                                    crossAxisCount: 4,
-                                    mainAxisSpacing: 8,
-                                    crossAxisSpacing: 8,
-                                    children: List.generate(5, (index) {
-                                      final year = DateTime.now().year + index;
-                                      return GestureDetector(
-                                        onTap: () => Navigator.pop(context, year),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: year == _selectedYear
-                                                ? Colors.red.withOpacity(0.2)
-                                                : Colors.grey.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(
-                                              color: Colors.red,
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '$year',
-                                              style: const TextStyle(
-                                                fontFamily: 'Poppins',
-                                                fontSize: 14,
-                                                color: Colors.red,
-                                                fontWeight: FontWeight.w600,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final selectedYear = await showDialog<int>(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: const Text(
+                                        'Chọn năm',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      content: SizedBox(
+                                        width: 300,
+                                        height: 200,
+                                        child: GridView.count(
+                                          crossAxisCount: 4,
+                                          mainAxisSpacing: 8,
+                                          crossAxisSpacing: 8,
+                                          children: List.generate(5, (index) {
+                                            final year =
+                                                DateTime.now().year + index;
+                                            return GestureDetector(
+                                              onTap:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                    year,
+                                                  ),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      year == _selectedYear
+                                                          ? Colors.red
+                                                              .withOpacity(0.2)
+                                                          : Colors.grey
+                                                              .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: Colors.red,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    '$year',
+                                                    style: const TextStyle(
+                                                      fontFamily: 'Poppins',
+                                                      fontSize: 14,
+                                                      color: Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                            );
+                                          }),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: const Text(
+                                            'Hủy',
+                                            style: TextStyle(color: Colors.red),
                                           ),
                                         ),
-                                      );
-                                    }),
-                                  ),
+                                      ],
+                                    ),
+                              );
+                              if (selectedYear != null && mounted) {
+                                setState(() {
+                                  _selectedYear = selectedYear;
+                                  _filter =
+                                      TaskFilter.all; // ✅ reset tab về “Tất cả”
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _scrollToSelectedFilter(
+                                    TaskFilter.all,
+                                  ); // ✅ cuộn về tab “Tất cả”
+                                });
+                                await _loadTasks();
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              height: 30,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.red.withOpacity(0.1),
+                                    Colors.red.withOpacity(0.2),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text(
-                                      'Hủy',
-                                      style: TextStyle(color: Colors.red),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.red,
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.red.withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _selectedYear != null
+                                        ? 'Năm $_selectedYear'
+                                        : 'Chọn năm',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red,
                                     ),
                                   ),
                                 ],
                               ),
-                            );
-                            if (selectedYear != null && mounted) {
-                              setState(() {
-                                _selectedYear = selectedYear;
-                              });
-                              await _loadTasks();
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            height: 45,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.red.withOpacity(0.1),
-                                  Colors.red.withOpacity(0.2),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.red, width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.withOpacity(0.2),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _selectedYear != null
-                                      ? 'Năm $_selectedYear'
-                                      : 'Chọn năm',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  // Stats Cards (giữ nguyên, thêm controller cho scroll ngang nếu cần)
-                  SizedBox(
-                    height: 80,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      controller: _filterScrollController,
-                      child: Row(
-                        children: [
-                          _buildStatCard(
-                            'Tất cả',
-                            _tasks.length,
-                            Colors.black,
-                            TaskFilter.all,
-                          ),
-                          _buildStatCard(
-                            'Chờ',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.todo)
-                                .length,
-                            Colors.grey.shade600,
-                            TaskFilter.todo,
-                          ),
-                          _buildStatCard(
-                            'Đang làm',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.inProgress)
-                                .length,
-                            Colors.blue,
-                            TaskFilter.inProgress,
-                          ),
-                          _buildStatCard(
-                            'Đã làm',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.done)
-                                .length,
-                            Colors.green.shade600,
-                            TaskFilter.done,
-                          ),
-                          _buildStatCard(
-                            'Kiểm thử',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.test)
-                                .length,
-                            Colors.purple.shade600,
-                            TaskFilter.test,
-                          ),
-                          _buildStatCard(
-                            'Hoàn thành',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.completed)
-                                .length,
-                            Colors.green.shade800,
-                            TaskFilter.completed,
-                          ),
-                          _buildStatCard(
-                            'Từ chối',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.reject)
-                                .length,
-                            Colors.red.shade900,
-                            TaskFilter.reject,
-                          ),
-                          _buildStatCard(
-                            'Tạm hoãn',
-                            _tasks
-                                .where((t) => t.status == TaskStatus.pending)
-                                .length,
-                            Colors.orange.shade600,
-                            TaskFilter.pending,
-                          ),
-                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // 7 TAB THỐNG KÊ - CUỘN NGANG
+                    SizedBox(
+                      height: 65,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        controller: _filterScrollController,
+                        child: Row(
+                          children: [
+                            _buildStatCard(
+                              'Tất cả',
+                              _tasks.length,
+                              Colors.black,
+                              TaskFilter.all,
+                            ),
+                            _buildStatCard(
+                              'Chờ',
+                              _tasks
+                                  .where((t) => t.status == TaskStatus.todo)
+                                  .length,
+                              Colors.grey.shade600,
+                              TaskFilter.todo,
+                            ),
+                            _buildStatCard(
+                              'Đang làm',
+                              _tasks
+                                  .where(
+                                    (t) => t.status == TaskStatus.inProgress,
+                                  )
+                                  .length,
+                              Colors.blue,
+                              TaskFilter.inProgress,
+                            ),
+                            _buildStatCard(
+                              'Đã làm',
+                              _tasks
+                                  .where((t) => t.status == TaskStatus.done)
+                                  .length,
+                              Colors.green.shade600,
+                              TaskFilter.done,
+                            ),
+                            _buildStatCard(
+                              'Kiểm thử',
+                              _tasks
+                                  .where((t) => t.status == TaskStatus.test)
+                                  .length,
+                              Colors.purple.shade600,
+                              TaskFilter.test,
+                            ),
+                            _buildStatCard(
+                              'Hoàn thành',
+                              _tasks
+                                  .where(
+                                    (t) => t.status == TaskStatus.completed,
+                                  )
+                                  .length,
+                              Colors.green.shade800,
+                              TaskFilter.completed,
+                            ),
+                            _buildStatCard(
+                              'Từ chối',
+                              _tasks
+                                  .where((t) => t.status == TaskStatus.reject)
+                                  .length,
+                              Colors.red.shade900,
+                              TaskFilter.reject,
+                            ),
+                            _buildStatCard(
+                              'Tạm hoãn',
+                              _tasks
+                                  .where((t) => t.status == TaskStatus.pending)
+                                  .length,
+                              Colors.orange.shade600,
+                              TaskFilter.pending,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  // Tasks List: Tự co giãn với shrinkWrap
-                  filteredTasks.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          shrinkWrap: true, // Tự co giãn theo nội dung
-                          physics: const NeverScrollableScrollPhysics(), // Tắt cuộn nội bộ, dùng cha để cuộn
+                  ],
+                ),
+              ),
+
+              // === PHẦN CUỘN: DANH SÁCH CÔNG VIỆC ===
+              Expanded(
+                child:
+                    filteredTasks.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 4,
@@ -697,10 +723,11 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
                             );
                           },
                         ),
-                ],
               ),
-            ),
+            ],
           ),
+
+          // === LOADING OVERLAY ===
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),
@@ -713,7 +740,6 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
     );
   }
 
-  /// Hàm mở link bằng trình duyệt
   Future<void> _openLink(String id) async {
     final url = "https://work.vtcnews.vn/Task/Details/$id";
     if (await canLaunchUrl(Uri.parse(url))) {
@@ -731,6 +757,8 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
     Color color,
     TaskFilter filter,
   ) {
+    final bool isSelected = _filter == filter;
+
     return GestureDetector(
       onTap: () {
         if (mounted) {
@@ -746,11 +774,11 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
         width: 100,
         margin: const EdgeInsets.symmetric(horizontal: 0),
         child: Card(
-          elevation: 1,
+          elevation: isSelected ? 3 : 1, // tăng nhẹ độ nổi nếu được chọn
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-          color: Colors.white,
+          color: isSelected ? Colors.green : Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
@@ -761,14 +789,14 @@ class _MyTaskState extends State<MyTask> with TickerProviderStateMixin {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: color,
+                    color: isSelected ? Colors.white : color,
                     fontFamily: 'Poppins',
                   ),
                 ),
                 Text(
                   title,
                   style: TextStyle(
-                    color: color,
+                    color: isSelected ? Colors.white : color,
                     fontSize: 10,
                     fontFamily: 'Poppins',
                   ),
