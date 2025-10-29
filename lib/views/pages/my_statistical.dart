@@ -49,8 +49,9 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
     } catch (e) {
       // Hiển thị lỗi khi gọi API thất bại
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Lỗi tải dữ liệu: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Lỗi tải dữ liệu: $e")));
       }
     } finally {
       // Kết thúc tải -> ẩn loading
@@ -61,41 +62,43 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       // Nội  chính của trang
       body: Column(
         children: [
           _buildMonthYearPicker(), // khu vực chọn tháng/năm
           Expanded(
-            child: _isLoading
-                // Hiển thị vòng tròn loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.red))
-                // Nếu không có dữ liệu
-                : _departments.isEmpty
+            child:
+                _isLoading
+                    // Hiển thị vòng tròn loading
                     ? const Center(
-                        child: Text(
-                          "Không có dữ liệu thống kê",
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
-                        ),
-                      )
+                      child: CircularProgressIndicator(color: Colors.red),
+                    )
+                    // Nếu không có dữ liệu
+                    : _departments.isEmpty
+                    ? const Center(
+                      child: Text(
+                        "Không có dữ liệu thống kê",
+                        style: TextStyle(color: Colors.black54, fontSize: 14),
+                      ),
+                    )
                     // Nếu có dữ liệu -> hiển thị dạng lưới
                     : GridView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: _departments.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              2, // mỗi hàng có 2 phòng ban hiển thị song song
-                          crossAxisSpacing: 12, // khoảng cách ngang giữa 2 cột
-                          mainAxisSpacing: 12, // khoảng cách dọc
-                          mainAxisExtent: 350, // chiều cao mỗi thẻ
-                        ),
-                        itemBuilder: (context, index) {
-                          final dept = _departments[index];
-                          return _buildDepartmentCard(dept);
-                        },
-                      ),
+                      padding: const EdgeInsets.all(12),
+                      itemCount: _departments.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                2, // mỗi hàng có 2 phòng ban hiển thị song song
+                            crossAxisSpacing:
+                                12, // khoảng cách ngang giữa 2 cột
+                            mainAxisSpacing: 12, // khoảng cách dọc
+                            mainAxisExtent: 350, // chiều cao mỗi thẻ
+                          ),
+                      itemBuilder: (context, index) {
+                        final dept = _departments[index];
+                        return _buildDepartmentCard(dept);
+                      },
+                    ),
           ),
         ],
       ),
@@ -154,14 +157,24 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
           _buildStatLine("Đang làm", inProgress, Icons.work, Colors.blue),
           _buildStatLine("Đã làm xong", done, Icons.done, Colors.green),
           _buildStatLine("Kiểm thử", test, Icons.bug_report, Colors.purple),
-          _buildStatLine("Hoàn thành", completed, Icons.check_circle, Colors.teal),
+          _buildStatLine(
+            "Hoàn thành",
+            completed,
+            Icons.check_circle,
+            Colors.teal,
+          ),
           _buildStatLine("Từ chối", reject, Icons.cancel, Colors.red),
-          _buildStatLine("Tạm dừng", pending, Icons.pause_circle, Colors.orange),
+          _buildStatLine(
+            "Tạm dừng",
+            pending,
+            Icons.pause_circle,
+            Colors.orange,
+          ),
         ],
       ),
     );
-    
   }
+
   Future<void> _openLink(String id) async {
     final url = "https://work.vtcnews.vn/Task/Details/$id";
     if (await canLaunchUrl(Uri.parse(url))) {
@@ -175,45 +188,44 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
 
   /// 📊 Xây dựng 1 dòng thống kê (label + icon + số lượng)
   Widget _buildStatLine(String label, int value, IconData icon, Color color) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: Row(
-      children: [
-        // Cụm icon + nhãn (chiếm hết phần còn lại bên trái)
-        Expanded(
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    overflow: TextOverflow.ellipsis, // nếu quá dài thì "..."
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          // Cụm icon + nhãn (chiếm hết phần còn lại bên trái)
+          Expanded(
+            child: Row(
+              children: [
+                Icon(icon, color: color, size: 16),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      overflow: TextOverflow.ellipsis, // nếu quá dài thì "..."
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        // Số lượng bên phải — luôn canh phải
-        Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
+          // Số lượng bên phải — luôn canh phải
+          Text(
+            value.toString(),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            textAlign: TextAlign.right,
           ),
-          textAlign: TextAlign.right,
-        ),
-      ],
-    ),
-  );
-}
-
+        ],
+      ),
+    );
+  }
 
   /// 📅 Thanh chọn tháng / năm
   Widget _buildMonthYearPicker() {
@@ -267,7 +279,7 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 48,
+        height: 30,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.red.withOpacity(0.1), Colors.red.withOpacity(0.2)],
@@ -300,39 +312,43 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
   Future<int?> _selectMonth() async {
     return showDialog<int>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Chọn tháng"),
-        content: SizedBox(
-          width: 300,
-          height: 250,
-          child: GridView.count(
-            crossAxisCount: 4,
-            children: List.generate(12, (i) {
-              final m = i + 1;
-              return GestureDetector(
-                onTap: () => Navigator.pop(context, m),
-                child: Container(
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: m == _selectedMonth
-                        ? Colors.red.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "$m",
-                      style: const TextStyle(
-                          color: Colors.red, fontWeight: FontWeight.bold),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Chọn tháng"),
+            content: SizedBox(
+              width: 300,
+              height: 250,
+              child: GridView.count(
+                crossAxisCount: 4,
+                children: List.generate(12, (i) {
+                  final m = i + 1;
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(context, m),
+                    child: Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color:
+                            m == _selectedMonth
+                                ? Colors.red.withOpacity(0.2)
+                                : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "$m",
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }),
+                  );
+                }),
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -341,39 +357,43 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
     final now = DateTime.now().year;
     return showDialog<int>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Chọn năm"),
-        content: SizedBox(
-          width: 300,
-          height: 180,
-          child: GridView.count(
-            crossAxisCount: 4,
-            children: List.generate(6, (i) {
-              final y = now - 2 + i; // hiển thị 5 năm gần nhất
-              return GestureDetector(
-                onTap: () => Navigator.pop(context, y),
-                child: Container(
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: y == _selectedYear
-                        ? Colors.red.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "$y",
-                      style: const TextStyle(
-                          color: Colors.red, fontWeight: FontWeight.bold),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Chọn năm"),
+            content: SizedBox(
+              width: 300,
+              height: 180,
+              child: GridView.count(
+                crossAxisCount: 4,
+                children: List.generate(6, (i) {
+                  final y = now - 2 + i; // hiển thị 5 năm gần nhất
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(context, y),
+                    child: Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color:
+                            y == _selectedYear
+                                ? Colors.red.withOpacity(0.2)
+                                : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "$y",
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }),
+                  );
+                }),
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 }
