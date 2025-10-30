@@ -164,7 +164,7 @@ class NotificationService {
     FirebaseMessaging.instance.onTokenRefresh.listen(onRefresh);
   }
 
-  Future<Map<String, dynamic>?> sendTokenToServer(String email) async {
+  Future<Map<String, dynamic>?> sendTokenToServer(String email,String password) async {
     try {
       final fcmToken = await FirebaseMessaging.instance.getToken();
 
@@ -172,10 +172,14 @@ class NotificationService {
         print("⚠️ Không lấy được FCM token");
         return null;
       }
+      if (password.isEmpty) {
+        print("⚠️ Vui lòng nhập mật khẩu");
+        return null;
+      }
 
       final url = Uri.parse("https://work.vtcnews.vn/User/UpdateTokenDevice");
 
-      final body = {"email": email, "token": fcmToken};
+      final body = {"email": email, "token": fcmToken, "password":password};
 
       final res = await http.post(
         url,
@@ -202,4 +206,6 @@ class NotificationService {
       return null;
     }
   }
+
 }
+

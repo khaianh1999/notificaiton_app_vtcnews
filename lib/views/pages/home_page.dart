@@ -41,7 +41,9 @@ class _HomePageState extends State<HomePage>
   static const _red = Color(0xFFA2171C);
 
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordlController = TextEditingController();
   String? _savedEmail;
+  String? _savedPassword;
   bool _isSubmitting = false;
 
   // Danh sách thông báo
@@ -79,10 +81,11 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  Future<void> _saveEmail(String email, int departmentId) async {
+  Future<void> _saveEmail(String email,String password, int departmentId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user_email", email);
     await prefs.setInt("departmentId", departmentId);
+    await prefs.setString("user_password", password);
     setState(() {
       _savedEmail = email;
     });
@@ -91,26 +94,33 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _submitEmail() async {
     final email = _emailController.text.trim();
+    final password = _passwordlController.text.trim();
     if (email.isEmpty || !email.contains("@")) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Vui lòng nhập email hợp lệ")),
       );
       return;
     }
+    if (password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Vui lòng nhập mật khẩu")),
+    );
+    return;
+  }
 
     setState(() => _isSubmitting = true);
     try {
-      final data = await NotificationService.instance.sendTokenToServer(email);
+      final data = await NotificationService.instance.sendTokenToServer(email,password);
 
       if (data != null && data["success"] == true) {
-        await _saveEmail(email, data["departmentId"]);
+        await _saveEmail(email,password, data["departmentId"]);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Cập nhật token thành công!")),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("❌ Không tìm thấy người dùng với email này!"),
+            content: Text("❌ Email hoặc mật khẩu không đúng!"),
           ),
         );
       }
@@ -237,6 +247,14 @@ class _HomePageState extends State<HomePage>
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: "Nhập email của bạn",
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _passwordlController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: "Nhập Mật khẩu của bạn",
           ),
         ),
         const SizedBox(height: 10),

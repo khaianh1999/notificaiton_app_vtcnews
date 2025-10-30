@@ -56,10 +56,10 @@ void main() async {
 
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString("user_email");
-
-      if (email != null && email.isNotEmpty) {
+      final password = prefs.getString("user_password");
+      if (email != null && email.isNotEmpty && password != null && password.isNotEmpty) {
         print("🔄 Token refresh → update server for $email");
-        await NotificationService.instance.sendTokenToServer(email);
+        await NotificationService.instance.sendTokenToServer(email, password);
       } else {
         print("ℹ️ Token refresh but no saved email");
       }
