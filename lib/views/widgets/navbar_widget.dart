@@ -54,21 +54,26 @@ class NavBarWidget extends StatelessWidget {
                 activeIcon: Icon(Icons.home),
                 label: 'Home',
               ),
-               BottomNavigationBarItem(
+              BottomNavigationBarItem(
                 icon: Icon(Icons.playlist_add_check_outlined),
-               activeIcon: Icon(Icons.playlist_add_check),
-                 label: 'MyTask',
-               ),
-               BottomNavigationBarItem(
-                 icon: Icon(Icons.playlist_add_check_outlined),
-                 activeIcon: Icon(Icons.playlist_add_check),
-                 label: 'MyGroup',
-               ),
-               BottomNavigationBarItem(
-                 icon: Icon(Icons.bar_chart_rounded),
-                 activeIcon: Icon(Icons.bar_chart_rounded),
-                 label: 'Dashboard',
-               ),
+                activeIcon: Icon(Icons.playlist_add_check),
+                label: 'MyTask',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.playlist_add_check_outlined),
+                activeIcon: Icon(Icons.playlist_add_check),
+                label: 'MyGroup',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.bar_chart_rounded),
+                activeIcon: Icon(Icons.bar_chart_rounded),
+                label: 'Dashboard',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_outlined),
+                activeIcon: Icon(Icons.settings),
+                label: 'Setting',
+              ),
             ],
           );
         },

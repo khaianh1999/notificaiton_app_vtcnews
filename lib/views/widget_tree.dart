@@ -9,6 +9,7 @@ import 'pages/home_page.dart';
 import '../data/notifiers.dart';
 import 'pages/my_task.dart';
 import 'pages/my_group.dart';
+import 'pages/setting_page.dart';
 // REMOVE the Firebase import as it's no longer needed here
 // import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -44,6 +45,7 @@ class _WidgetTreeState extends State<WidgetTree> {
       MyTask(),
       MyGroup(),
       TaskStatisticsScreen(),
+      SettingPage(),
     ];
 
     _pageCtrl = PageController(initialPage: selectedPageNotifier.value);
@@ -97,7 +99,7 @@ class _WidgetTreeState extends State<WidgetTree> {
           children: _pages,
         ),
       ),
-      bottomNavigationBar: NavBarWidget(controller: _pageCtrl ),
+      bottomNavigationBar: NavBarWidget(controller: _pageCtrl),
     );
   }
 }
