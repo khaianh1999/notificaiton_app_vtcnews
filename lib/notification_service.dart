@@ -79,58 +79,44 @@ class NotificationService {
   }
 
   Future<void> bindMessageHandlers() async {
-    // App đang mở (foreground)
-    FirebaseMessaging.onMessage.listen((RemoteMessage msg) {
-      print("📥 Foreground message received: ${msg}");
-      print("📥 Foreground message received: ${msg.data}");
+  // App đang foreground
+  FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
+    print("📥 Foreground message received: ${msg.data}");
+    
+    // Lấy title + body ưu tiên msg.notification, fallback msg.data
+    final title = msg.notification?.title ?? msg.data['title']?.toString() ?? 'Thông báo';
+    final body = msg.notification?.body ?? msg.data['body']?.toString() ?? '';
 
-      // SỬA LẠI CÁCH LẤY DỮ LIỆU ĐỂ AN TOÀN HƠN
-      final title = msg.data['title']?.toString();
-      final body = msg.data['body']?.toString();
-
-      // Thêm log để kiểm tra giá trị sau khi lấy
-      print("   -> Extracted Title: $title");
-      print("   -> Extracted Body: $body");
-
-      // Chỉ hiển thị thông báo nếu có title và body (và không rỗng)
-      if (title != null &&
-          body != null &&
-          title.isNotEmpty &&
-          body.isNotEmpty) {
-        print("   -> Conditions met. Showing local notification...");
-        _fln.show(
-          DateTime.now().millisecondsSinceEpoch % 2147483647,
-          title,
-          body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              highChannel.id,
-              highChannel.name,
-              channelDescription: highChannel.description,
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@drawable/ic_stat_notification',
-            ),
-            iOS: const DarwinNotificationDetails(),
+    if (title.isNotEmpty && body.isNotEmpty) {
+      await _fln.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            highChannel.id,
+            highChannel.name,
+            channelDescription: highChannel.description,
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@drawable/ic_stat_notification',
           ),
-          payload: jsonEncode(msg.data),
-        );
-      } else {
-        print(
-          "   -> Conditions FAILED. Title or Body is null or empty. Notification not shown.",
-        );
-      }
-    });
-    // App chạy nền (background)
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      print("📬 Notification tapped from background");
-      print("📌 onMessageOpenedApp called");
-      print("   -> data: ${message.data}");
-      print("   -> notification: ${message.notification}");
-      // Gọi hàm điều hướng với message.data
-      navigateToArticleDetail(message.data);
-    });
-  }
+          iOS: const DarwinNotificationDetails(),
+        ),
+        payload: jsonEncode(msg.data),
+      );
+    } else {
+      print("⚠️ Không có title/body, notification không được show");
+    }
+  });
+
+  // Khi user tap thông báo (background hoặc terminated)
+  FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    print("📬 onMessageOpenedApp: ${message.data}");
+    navigateToArticleDetail(message.data);
+  });
+}
+
 
   void navigateToArticleDetail(Map<String, dynamic> data) async {
     print("➡️ Navigating with data: $data");
