@@ -1,43 +1,32 @@
-import 'package:flutter/material.dart';
-import 'package:notification_vtcnews/data/notifiers.dart';
-import 'package:notification_vtcnews/views/widget_tree.dart';
-import 'package:notification_vtcnews/views/pages/splash_page.dart';
 import 'dart:io';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'firebase_options.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:notification_vtcnews/font_size_provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+import 'firebase_options.dart';
+import 'notification_service.dart';
+import 'package:notification_vtcnews/font_size_provider.dart';
+import 'package:notification_vtcnews/data/notifiers.dart';
+import 'package:notification_vtcnews/views/pages/splash_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-@pragma('vm:entry-point') // 👈 bắt buộc để Android AOT không tối ưu mất hàm này
+@pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Optional: handle data in the background
+  print("📩 Background message: ${message.data}");
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  if (Platform.isAndroid) {
-    // This part is for WebView and should be kept
-    // WebView.platform = SurfaceAndroidWebView();
-  }
-
-  final fontSizeProvider = FontSizeProvider();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  final fontSizeProvider = FontSizeProvider();
 
-  // Get the initial message when the app is launched from a terminated state
-  final RemoteMessage? initialMessage =
-      await FirebaseMessaging.instance.getInitialMessage();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   await Future.wait([
     fontSizeProvider.loadFontSize(),
@@ -46,6 +35,7 @@ void main() async {
     NotificationService.instance.configureFirebaseForegroundPresentation(),
     NotificationService.instance.bindMessageHandlers(),
   ]);
+  // Lấy FCM token + subscribe topic
   NotificationService.instance.getToken().then((token) {
     if (token != null) {
       print("🔑 FCM Token: $token");
@@ -57,7 +47,11 @@ void main() async {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString("user_email");
       final password = prefs.getString("user_password");
-      if (email != null && email.isNotEmpty && password != null && password.isNotEmpty) {
+
+      if (email != null &&
+          email.isNotEmpty &&
+          password != null &&
+          password.isNotEmpty) {
         print("🔄 Token refresh → update server for $email");
         await NotificationService.instance.sendTokenToServer(email, password);
       } else {
@@ -65,6 +59,10 @@ void main() async {
       }
     });
   });
+
+  // ✅ Chỉ khai báo một lần, không navigate ở đây (để tránh lỗi iOS)
+  final RemoteMessage? initialMessage =
+      await FirebaseMessaging.instance.getInitialMessage();
 
   runApp(
     ChangeNotifierProvider(
@@ -84,6 +82,27 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ Dành cho iOS: khi app mở lại từ thông báo (terminated)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialMessage != null) {
+        print("📦 App mở từ terminated → navigateToArticleDetail()");
+        NotificationService.instance.navigateToArticleDetail(
+          widget.initialMessage!.data,
+        );
+      }
+    });
+
+    // ✅ Android và iOS (background)
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      print("📬 onMessageOpenedApp trigger: ${message.data}");
+      NotificationService.instance.navigateToArticleDetail(message.data);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
