@@ -19,13 +19,14 @@ class _AddTaskFormState extends State<AddTaskForm> {
   final titleCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   final pointCtrl = TextEditingController();
+
   bool _isSaving = false;
+  bool _isLoadingUsers = false;
 
   List<Map<String, dynamic>> _users = [];
   Map<String, dynamic>? _selectedUser;
 
   int selectedStatus = 1;
-
   DateTime? _startDate;
   DateTime? _endDate;
   String? email = "";
@@ -33,92 +34,108 @@ class _AddTaskFormState extends State<AddTaskForm> {
   @override
   void initState() {
     super.initState();
-    _fetchUsers();
-    _loadSavedEmail();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    await _loadSavedEmail();
+    await _fetchUsers();
   }
 
   Future<void> _loadSavedEmail() async {
     final prefs = await SharedPreferences.getInstance();
-    email = prefs.getString("user_email");
+    setState(() {
+      email = prefs.getString("user_email") ?? "";
+    });
   }
 
   Future<void> _fetchUsers() async {
+    setState(() => _isLoadingUsers = true);
     try {
       final response = await http.get(
         Uri.parse('https://work.vtcnews.vn/User/GetUser'),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
+        if (data['success'] == true && data['data'] != null) {
           setState(() {
             _users = List<Map<String, dynamic>>.from(data['data']);
           });
         }
+      } else {
+        debugPrint('Lỗi tải danh sách người dùng: ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('Lỗi tải danh sách người dùng: $e');
+    } finally {
+      setState(() => _isLoadingUsers = false);
     }
   }
 
-  Future<void> _selectStartDate(BuildContext context) async {
+  Future<void> _selectDate({required bool isStart}) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _startDate ?? DateTime.now(),
+      initialDate: (isStart ? _startDate : _endDate) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.red,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
+      builder:
+          (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: Colors.red,
+                onPrimary: Colors.white,
+                onSurface: Colors.black,
+              ),
             ),
+            child: child!,
           ),
-          child: child!,
-        );
-      },
     );
-    if (picked != null && picked != _startDate) {
-      setState(() => _startDate = picked);
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _startDate = picked;
+        } else {
+          _endDate = picked;
+        }
+      });
     }
   }
 
-  Future<void> _selectEndDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.red,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _endDate) {
-      setState(() => _endDate = picked);
+  bool _validateBeforeSubmit() {
+    if (_selectedUser == null) {
+      _showSnack('Vui lòng chọn người phụ trách');
+      return false;
     }
+    if (_startDate == null) {
+      _showSnack('Vui lòng chọn ngày bắt đầu');
+      return false;
+    }
+    if (_endDate == null) {
+      _showSnack('Vui lòng chọn ngày kết thúc');
+      return false;
+    }
+    if (_endDate!.isBefore(_startDate!)) {
+      _showSnack('Ngày kết thúc phải sau ngày bắt đầu');
+      return false;
+    }
+    if (email == null || email!.isEmpty) {
+      _showSnack('Không tìm thấy email người tạo');
+      return false;
+    }
+    return true;
+  }
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Future<void> _addTask() async {
-    if (_selectedUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn người phụ trách')),
-      );
-      return;
-    }
-
+    FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _isSaving) return;
+    if (!_validateBeforeSubmit()) return;
 
     setState(() => _isSaving = true);
+
     try {
       final uri = Uri.parse('https://work.vtcnews.vn/Task/CreateTask').replace(
         queryParameters: {
@@ -126,14 +143,8 @@ class _AddTaskFormState extends State<AddTaskForm> {
           'title': titleCtrl.text.trim(),
           'description': descCtrl.text.trim(),
           'userId': _selectedUser!["UserId"].toString(),
-          'startDate':
-              _startDate != null
-                  ? DateFormat('yyyy-MM-dd').format(_startDate!)
-                  : '',
-          'endDate':
-              _endDate != null
-                  ? DateFormat('yyyy-MM-dd').format(_endDate!)
-                  : '',
+          'startDate': DateFormat('yyyy-MM-dd').format(_startDate!),
+          'endDate': DateFormat('yyyy-MM-dd').format(_endDate!),
           'point': pointCtrl.text.trim(),
           'status': selectedStatus.toString(),
           'type': '1',
@@ -141,16 +152,12 @@ class _AddTaskFormState extends State<AddTaskForm> {
       );
 
       final response = await http.post(uri);
-      print(uri);
-      print(response.statusCode);
-      print(jsonDecode(response.body));
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Thêm công việc thành công')),
-            );
+            _showSnack('Thêm công việc thành công');
             await widget.onTaskAdded();
             Navigator.pop(context);
           }
@@ -161,11 +168,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
         throw Exception('Lỗi server: ${response.statusCode}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-      }
+      if (mounted) _showSnack('Lỗi: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -173,8 +176,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Danh sách trạng thái
-    const List<String> statusLabels = [
+    const statusLabels = [
       'Chờ',
       'Đang làm',
       'Đã làm',
@@ -183,34 +185,46 @@ class _AddTaskFormState extends State<AddTaskForm> {
       'Từ chối',
       'Tạm hoãn',
     ];
-    const List<int> statusValues = [1, 2, 3, 4, 5, 6, 7];
+    const statusValues = [1, 2, 3, 4, 5, 6, 7];
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 24,
-      ),
+    // 👇 Bọc toàn bộ trong GestureDetector để bấm ra ngoài input ẩn bàn phím
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
+        reverse: true, // giúp cuộn tự động khi bàn phím mở
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          left: 16,
+          right: 16,
+          top: 8,
+        ),
         child: Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              const Center(
-                child: Text(
-                  'Thêm công việc mới',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
+              // --- Header + nút đóng ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Thêm công việc mới',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.grey),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const Divider(),
 
-              // TIÊU ĐỀ
+              const SizedBox(height: 12),
               TextFormField(
                 controller: titleCtrl,
                 decoration: _inputDecoration('Tiêu đề công việc'),
+                textInputAction: TextInputAction.next,
                 validator:
                     (v) =>
                         v == null || v.trim().isEmpty
@@ -219,7 +233,6 @@ class _AddTaskFormState extends State<AddTaskForm> {
               ),
               const SizedBox(height: 16),
 
-              // MÔ TẢ
               TextFormField(
                 controller: descCtrl,
                 decoration: _inputDecoration('Mô tả công việc'),
@@ -232,7 +245,6 @@ class _AddTaskFormState extends State<AddTaskForm> {
               ),
               const SizedBox(height: 16),
 
-              // ĐIỂM
               TextFormField(
                 controller: pointCtrl,
                 decoration: _inputDecoration('Điểm'),
@@ -245,90 +257,47 @@ class _AddTaskFormState extends State<AddTaskForm> {
               ),
               const SizedBox(height: 16),
 
-              // NGÀY BẮT ĐẦU
-              GestureDetector(
-                onTap: () => _selectStartDate(context),
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    decoration: _inputDecoration('Ngày bắt đầu').copyWith(
-                      suffixIcon: const Icon(
-                        Icons.calendar_today,
-                        color: Colors.red,
-                      ),
-                    ),
-                    readOnly: true,
-                    controller: TextEditingController(
-                      text:
-                          _startDate != null
-                              ? DateFormat('dd/MM/yyyy').format(_startDate!)
-                              : '',
-                    ),
-                  ),
-                ),
-              ),
+              _buildDateField('Ngày bắt đầu', _startDate, true),
+              const SizedBox(height: 16),
+              _buildDateField('Ngày kết thúc', _endDate, false),
               const SizedBox(height: 16),
 
-              // NGÀY KẾT THÚC
-              GestureDetector(
-                onTap: () => _selectEndDate(context),
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    decoration: _inputDecoration('Ngày kết thúc').copyWith(
-                      suffixIcon: const Icon(
-                        Icons.calendar_today,
-                        color: Colors.red,
-                      ),
-                    ),
-                    readOnly: true,
-                    controller: TextEditingController(
-                      text:
-                          _endDate != null
-                              ? DateFormat('dd/MM/yyyy').format(_endDate!)
-                              : '',
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // NGƯỜI PHỤ TRÁCH
-              DropdownSearch<Map<String, dynamic>>(
-                popupProps: const PopupProps.menu(
-                  showSearchBox: true,
-                  searchFieldProps: TextFieldProps(
-                    decoration: InputDecoration(
-                      hintText: 'Tìm tên hoặc phòng ban...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+              if (_isLoadingUsers)
+                const Center(child: CircularProgressIndicator())
+              else
+                DropdownSearch<Map<String, dynamic>>(
+                  popupProps: const PopupProps.menu(
+                    showSearchBox: true,
+                    searchFieldProps: TextFieldProps(
+                      decoration: InputDecoration(
+                        hintText: 'Tìm tên hoặc phòng ban...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
                     ),
                   ),
+                  items: _users,
+                  itemAsString:
+                      (user) =>
+                          '${user["UserName"]} - ${user["DepartmentName"]}',
+                  dropdownDecoratorProps: DropDownDecoratorProps(
+                    dropdownSearchDecoration: _inputDecoration(
+                      'Người phụ trách',
+                    ),
+                  ),
+                  selectedItem: _selectedUser,
+                  validator:
+                      (val) =>
+                          val == null ? 'Vui lòng chọn người phụ trách' : null,
+                  onChanged: (val) => setState(() => _selectedUser = val),
                 ),
-                items: _users,
-                itemAsString:
-                    (user) => '${user["UserName"]} - ${user["DepartmentName"]}',
-                dropdownDecoratorProps: DropDownDecoratorProps(
-                  dropdownSearchDecoration: _inputDecoration('Người phụ trách'),
-                ),
-                selectedItem: _selectedUser,
-                onChanged: (val) => setState(() => _selectedUser = val),
-                dropdownBuilder: (context, selectedItem) {
-                  if (selectedItem == null)
-                    return const Text('Chọn người phụ trách');
-                  return Text(
-                    '${selectedItem["UserName"]} - ${selectedItem["DepartmentName"]}',
-                    style: const TextStyle(color: Colors.black87),
-                  );
-                },
-              ),
               const SizedBox(height: 16),
 
-              // TRẠNG THÁI - ĐẸP HƠN, MƯỢT HƠN
-              // === THAY TỪ ĐÂY ===
               const Text(
                 'Trạng thái công việc',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -350,66 +319,92 @@ class _AddTaskFormState extends State<AddTaskForm> {
                       ),
                     ),
                     selected: isSelected,
-                    onSelected: (_) {
-                      setState(() {
-                        selectedStatus = statusValues[index];
-                      });
-                    },
-                    selectedColor: Colors.red,
+                    onSelected:
+                        (_) => setState(
+                          () => selectedStatus = statusValues[index],
+                        ),
+                    selectedColor: Colors.redAccent,
                     backgroundColor: Colors.grey[200],
-                    labelPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 0,
-                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected ? Colors.red : Colors.transparent,
-                        width: 1.5,
+                        color:
+                            isSelected ? Colors.redAccent : Colors.transparent,
+                        width: 1.2,
                       ),
                     ),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
                   );
                 }),
               ),
-
-              const SizedBox(height: 20),
-
-              // === ĐẾN ĐÂY ===
               const SizedBox(height: 24),
 
-              // NÚT THÊM
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _addTask,
-                icon:
-                    _isSaving
-                        ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
-                        )
-                        : const Icon(Icons.add),
-                label: Text(_isSaving ? 'Đang thêm...' : 'Thêm công việc'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Hủy'),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isSaving ? null : _addTask,
+                      icon:
+                          _isSaving
+                              ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                              : const Icon(Icons.add),
+                      label: Text(
+                        _isSaving ? 'Đang thêm...' : 'Thêm công việc',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 12),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateField(String label, DateTime? date, bool isStart) {
+    return GestureDetector(
+      onTap: () => _selectDate(isStart: isStart),
+      child: AbsorbPointer(
+        child: TextFormField(
+          decoration: _inputDecoration(label).copyWith(
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              color: Colors.redAccent,
+            ),
+          ),
+          controller: TextEditingController(
+            text: date != null ? DateFormat('dd/MM/yyyy').format(date) : '',
+          ),
+          validator: (v) => (date == null) ? 'Vui lòng chọn $label' : null,
+          readOnly: true,
         ),
       ),
     );
