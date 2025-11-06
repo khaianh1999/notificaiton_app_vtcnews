@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:notification_vtcnews/data/models/task_mode.dart';
+import 'package:notification_vtcnews/views/widgets/add_job_detail.dart';
 import 'package:notification_vtcnews/views/widgets/task_detaildialong.dart';
 import 'package:notification_vtcnews/views/widgets/task_item_widget.dart';
 import 'package:notification_vtcnews/data/repositories/add_task.dart';
@@ -851,6 +852,11 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
             ),
         ],
       ),
+        floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        onPressed: () => showAddTaskSheet(context, _loadTasks), // ← Đúng kiểu
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
@@ -941,6 +947,17 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
           ),
         ],
       ),
+    );
+  }
+    // Thêm Công Việc
+  void showAddTaskSheet(
+    BuildContext context,
+    Future<void> Function() onTaskAdded,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AddTaskForm(onTaskAdded: onTaskAdded),
     );
   }
 }
