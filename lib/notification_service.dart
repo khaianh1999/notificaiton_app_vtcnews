@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 // import 'package:notification_vtcnews/views/pages/article_detail_page.dart';
 import 'package:notification_vtcnews/main.dart'; // << THÊM IMPORT NÀY ĐỂ DÙNG navigatorKey
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NotificationService {
@@ -119,30 +120,44 @@ class NotificationService {
 
 
   void navigateToArticleDetail(Map<String, dynamic> data) async {
-    print("➡️ Navigating with data: $data");
+  print("➡️ Navigating with data: $data");
 
-    if (data.containsKey('link')) {
-      final link = data['link']?.toString() ?? '';
-      if (link.isNotEmpty) {
-        final uri = Uri.parse(link);
-        try {
-          final success = await launchUrl(
-            uri,
-            mode: LaunchMode.externalApplication,
-          );
-          if (!success) {
-            print("❌ Không mở được link (launchUrl trả về false): $link");
-          }
-        } catch (e) {
-          print("❌ Exception khi mở link: $e");
-        }
-      } else {
-        print("⚠️ data['link'] rỗng");
-      }
-    } else {
-      print("⚠️ Không có trường 'link' trong data");
+  if (data.containsKey('link')) {
+    final link = data['link']?.toString() ?? '';
+    if (link.isEmpty) {
+      print("⚠️ data['link'] rỗng");
+      return;
     }
+
+    try {
+      // Lấy email & password từ SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString("user_email") ?? "";
+      final password = prefs.getString("user_password") ?? "";
+
+      // Encode để tránh lỗi ký tự đặc biệt
+      final encodedEmail = Uri.encodeComponent(email);
+      final encodedPassword = Uri.encodeComponent(password);
+
+      // Ghép URL hoàn chỉnh
+      final fullUrl = "$link?email=$encodedEmail&password=$encodedPassword";
+      final uri = Uri.parse(fullUrl);
+
+      print("🌐 Opening URL: $fullUrl");
+
+      // Mở link trong trình duyệt ngoài
+      final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+      if (!success) {
+        print("❌ Không thể mở link: $fullUrl");
+      }
+    } catch (e) {
+      print("❌ Lỗi khi mở link có xác thực: $e");
+    }
+  } else {
+    print("⚠️ Không có trường 'link' trong data");
   }
+}
 
   // Các hàm còn lại giữ nguyên
   Future<String?> getToken() => FirebaseMessaging.instance.getToken();

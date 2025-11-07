@@ -122,7 +122,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
 
   bool _validateBeforeSubmit() {
     if (_selectedUser == null) {
-      _showSnack('Vui lòng chọn người phụ trách');
+      _showSnack('Vui lòng chọn người thực hiện');
       return false;
     }
     if (_startDate == null) {
@@ -303,13 +303,13 @@ class _AddTaskFormState extends State<AddTaskForm> {
                           '${user["UserName"]} - ${user["DepartmentName"]}',
                   dropdownDecoratorProps: DropDownDecoratorProps(
                     dropdownSearchDecoration: _inputDecoration(
-                      'Người phụ trách',
+                      'Người thực hiện',
                     ),
                   ),
                   selectedItem: _selectedUser,
                   validator:
                       (val) =>
-                          val == null ? 'Vui lòng chọn người phụ trách' : null,
+                          val == null ? 'Vui lòng chọn người thực hiện' : null,
                   onChanged: (val) => setState(() => _selectedUser = val),
                 ),
               const SizedBox(height: 16),
