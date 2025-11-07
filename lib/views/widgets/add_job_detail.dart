@@ -73,11 +73,26 @@ class _AddTaskFormState extends State<AddTaskForm> {
   }
 
   Future<void> _selectDate({required bool isStart}) async {
+    final DateTime now = DateTime.now();
+
+    // --- Xác định các mốc giới hạn ---
+    DateTime initialDate =
+        (isStart ? (_startDate ?? now) : (_endDate ?? _startDate ?? now));
+
+    DateTime firstDate =
+        isStart ? DateTime(2020) : (_startDate ?? DateTime(2020));
+
+    DateTime lastDate = DateTime(2030);
+
+    // --- Nếu initialDate < firstDate => gán lại để tránh crash ---
+    if (initialDate.isBefore(firstDate)) {
+      initialDate = firstDate;
+    }
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: (isStart ? _startDate : _endDate) ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
       builder:
           (context, child) => Theme(
             data: Theme.of(context).copyWith(
@@ -94,6 +109,10 @@ class _AddTaskFormState extends State<AddTaskForm> {
       setState(() {
         if (isStart) {
           _startDate = picked;
+          // 👇 Nếu startDate > endDate => reset endDate
+          if (_endDate != null && _startDate!.isAfter(_endDate!)) {
+            _endDate = null;
+          }
         } else {
           _endDate = picked;
         }
@@ -181,9 +200,6 @@ class _AddTaskFormState extends State<AddTaskForm> {
       'Đang làm',
       'Đã làm',
       'Kiểm thử',
-      'Hoàn thành',
-      'Từ chối',
-      'Tạm hoãn',
     ];
     const statusValues = [1, 2, 3, 4, 5, 6, 7];
 
