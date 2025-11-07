@@ -8,7 +8,8 @@ import 'package:notification_vtcnews/views/widgets/task_item_widget.dart';
 import 'package:notification_vtcnews/data/repositories/add_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:uuid/uuid.dart';
+
+enum ViewMode { my, department, company }
 
 class MyGroup extends StatefulWidget {
   const MyGroup({super.key});
@@ -20,15 +21,15 @@ class MyGroup extends StatefulWidget {
 class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
   final List<TaskModel> _tasks = [];
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
-  final GlobalKey<AnimatedListState> _listKey2 = GlobalKey<AnimatedListState>();
   TaskFilter _filter = TaskFilter.all;
   final ScrollController _filterScrollController = ScrollController();
   int? _selectedMonth;
   int? _selectedYear;
   final TextEditingController _emailController = TextEditingController();
-  bool _isCompanyView = false; // false = phòng tôi, true = cơ quan
   String? _savedEmail;
   bool _isLoading = false;
+  ViewMode _viewMode = ViewMode.my; // mặc định: của tôi
+
   static const _red = Color(0xFFA2171C);
 
   @override
@@ -58,50 +59,7 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _saveEmail(String email) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString("user_email", email);
-    if (mounted) {
-      setState(() {
-        _savedEmail = email;
-      });
-      await _loadTasks();
-    }
-  }
-
-  Future<void> _submitEmail() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty || !email.contains("@")) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Vui lòng nhập email hợp lệ")),
-        );
-      }
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      await _saveEmail(email);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Đã lưu email thành công!")),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Lỗi khi lưu email: $e")));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _loadTasks({bool all = false}) async {
+  Future<void> _loadTasks() async {
     if (_savedEmail == null ||
         _selectedMonth == null ||
         _selectedYear == null) {
@@ -112,15 +70,20 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
     try {
       final prefs = await SharedPreferences.getInstance();
       int? departmentId = prefs.getInt("departmentId");
-      if (departmentId == null) {
-        throw Exception("Không tìm thấy departmentId");
-      }
-      if (all) {
-        departmentId = null;
+      final email = prefs.getString("user_email");
+      String url = "";
+
+      if (_viewMode == ViewMode.my) {
+        url =
+            "https://work.vtcnews.vn/task/GetTasksByDepartment?email=$email&departmentId=$departmentId&month=$_selectedMonth&year=$_selectedYear";
+      } else if (_viewMode == ViewMode.department) {
+        url =
+            "https://work.vtcnews.vn/task/GetTasksByDepartment?departmentId=$departmentId&month=$_selectedMonth&year=$_selectedYear";
+      } else {
+        url =
+            "https://work.vtcnews.vn/task/GetTasksByDepartment?departmentId=&month=$_selectedMonth&year=$_selectedYear";
       }
 
-      final url =
-          'https://work.vtcnews.vn/task/GetTasksByDepartment?departmentId=$departmentId&month=$_selectedMonth&year=$_selectedYear';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200 && mounted) {
@@ -128,10 +91,9 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
         if (jsonData['success'] == true) {
           final List<dynamic> tasksList = jsonData['data'];
           setState(() {
-            _tasks.clear();
-            _tasks.addAll(
-              tasksList.map((json) => TaskModel.fromJson(json)).toList(),
-            );
+            _tasks
+              ..clear()
+              ..addAll(tasksList.map((json) => TaskModel.fromJson(json)));
           });
         } else {
           throw Exception('API returned success: false');
@@ -140,174 +102,46 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
         throw Exception('Failed to load tasks: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading tasks: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Lỗi khi tải công việc: $e')));
-        setState(() {
-          _tasks.clear();
-        });
+        setState(() => _tasks.clear());
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Future<void> _saveTasks() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final tasksJson = jsonEncode(
-        _tasks.map((task) => task.toJson()).toList(),
-      );
-      await prefs.setString('tasks', tasksJson);
-    } catch (e) {
-      print('Error saving tasks: $e');
-    }
-  }
-
-  void _addTask(TaskModel task) {
-    final insertIndex = 0;
-    if (mounted) {
-      setState(() {
-        _tasks.insert(insertIndex, task);
-        _listKey.currentState?.insertItem(
-          insertIndex,
-          duration: const Duration(milliseconds: 300),
-        );
-      });
-      Future.microtask(_saveTasks);
-    }
-  }
-
-  void _updateTask(TaskModel updatedTask) {
-    if (mounted) {
-      setState(() {
-        final index = _tasks.indexWhere((task) => task.id == updatedTask.id);
-        if (index != -1) {
-          _tasks[index] = updatedTask;
-          _tasks.sort((a, b) => b.date.compareTo(a.date));
-        }
-      });
-      Future.microtask(() async {
-        await _saveTasks();
-        if (mounted && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã cập nhật công việc'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      });
-    }
-  }
-
-  void _changeStatus(String taskId, TaskStatus newStatus) {
-    if (mounted) {
-      setState(() {
-        final index = _tasks.indexWhere((task) => task.id == taskId);
-        if (index != -1)
-          _tasks[index] = _tasks[index].copyWith(status: newStatus);
-      });
-      Future.microtask(_saveTasks);
-    }
-  }
-
-  Widget _buildRemovedItem(TaskModel task, Animation<double> animation) {
-    return SlideTransition(
-      position: animation.drive(
-        Tween<Offset>(
-          begin: Offset.zero,
-          end: const Offset(-0.3, 0.0),
-        ).chain(CurveTween(curve: Curves.decelerate)),
-      ),
-      child: FadeTransition(
-        opacity: animation,
-        child: SizeTransition(
-          sizeFactor: animation,
-          child: TaskItem(key: ValueKey(task.id), task: task, onTap: () {}),
-        ),
-      ),
-    );
-  }
-
-  void _undoDelete(TaskModel task, int originalIndex) {
-    if (mounted) {
-      setState(() {
-        _tasks.insert(originalIndex, task);
-        _listKey.currentState?.insertItem(
-          originalIndex,
-          duration: const Duration(milliseconds: 300),
-        );
-      });
-      Future.microtask(_saveTasks);
-    }
-  }
-
-  void _showTaskDetails(TaskModel task) {
-    if (!mounted || !context.mounted) return;
-    showDialog(
-      context: context,
-      builder:
-          (dialogContext) => TaskDetailDialog(
-            task: task,
-            onUpdateTask: _updateTask,
-            onChangeStatus: (status) => _changeStatus(task.id, status),
-          ),
-    );
-  }
-
-  void _showAddTaskDialog() {
-    if (!mounted || !context.mounted) return;
-    showDialog(
-      context: context,
-      builder: (context) => AddTaskDialog(onAddTask: _addTask),
-    );
   }
 
   List<TaskModel> _getFilteredTasks() {
     List<TaskModel> filtered = _tasks;
-
     switch (_filter) {
       case TaskFilter.all:
         break;
       case TaskFilter.todo:
-        filtered =
-            filtered.where((task) => task.status == TaskStatus.todo).toList();
+        filtered = filtered.where((t) => t.status == TaskStatus.todo).toList();
         break;
       case TaskFilter.inProgress:
         filtered =
-            filtered
-                .where((task) => task.status == TaskStatus.inProgress)
-                .toList();
+            filtered.where((t) => t.status == TaskStatus.inProgress).toList();
         break;
       case TaskFilter.done:
-        filtered =
-            filtered.where((task) => task.status == TaskStatus.done).toList();
+        filtered = filtered.where((t) => t.status == TaskStatus.done).toList();
         break;
       case TaskFilter.test:
-        filtered =
-            filtered.where((task) => task.status == TaskStatus.test).toList();
+        filtered = filtered.where((t) => t.status == TaskStatus.test).toList();
         break;
       case TaskFilter.completed:
         filtered =
-            filtered
-                .where((task) => task.status == TaskStatus.completed)
-                .toList();
+            filtered.where((t) => t.status == TaskStatus.completed).toList();
         break;
       case TaskFilter.reject:
         filtered =
-            filtered.where((task) => task.status == TaskStatus.reject).toList();
+            filtered.where((t) => t.status == TaskStatus.reject).toList();
         break;
       case TaskFilter.pending:
         filtered =
-            filtered
-                .where((task) => task.status == TaskStatus.pending)
-                .toList();
+            filtered.where((t) => t.status == TaskStatus.pending).toList();
         break;
     }
     return filtered;
@@ -335,16 +169,13 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // === TOÀN BỘ GIAO DIỆN ===
           Column(
             children: [
-              // === PHẦN CỐ ĐỊNH TRÊN CÙNG ===
               Padding(
-             padding: const EdgeInsets.symmetric(horizontal: 5.0),
-
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
                 child: Column(
                   children: [
-                    // Chọn tháng/năm
+                    // --- CHỌN THÁNG / NĂM ---
                     Row(
                       children: [
                         Expanded(
@@ -353,138 +184,21 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                             onTap: () async {
                               final selectedMonth = await showDialog<int>(
                                 context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: const Text(
-                                        'Chọn tháng',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      content: SizedBox(
-                                        width: 300,
-                                        height: 250,
-                                        child: GridView.count(
-                                          crossAxisCount: 4,
-                                          mainAxisSpacing: 8,
-                                          crossAxisSpacing: 8,
-                                          children: List.generate(12, (index) {
-                                            final month = index + 1;
-                                            return GestureDetector(
-                                              onTap:
-                                                  () => Navigator.pop(
-                                                    context,
-                                                    month,
-                                                  ),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      month == _selectedMonth
-                                                          ? Colors.red
-                                                              .withOpacity(0.2)
-                                                          : Colors.grey
-                                                              .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  border: Border.all(
-                                                    color: Colors.red,
-                                                    width: 0,
-                                                  ),
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    '$month',
-                                                    style: const TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontSize: 14,
-                                                      color: Colors.red,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }),
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: const Text(
-                                            'Hủy',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                builder: (context) => _buildMonthDialog(),
                               );
                               if (selectedMonth != null && mounted) {
                                 setState(() {
                                   _selectedMonth = selectedMonth;
-                                  _filter =
-                                      TaskFilter.all; // ✅ reset tab về “Tất cả”
+                                  _filter = TaskFilter.all;
                                 });
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  _scrollToSelectedFilter(
-                                    TaskFilter.all,
-                                  ); // ✅ cuộn về tab “Tất cả”
-                                });
-                                await _loadTasks(all: _isCompanyView);
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                  (_) =>
+                                      _scrollToSelectedFilter(TaskFilter.all),
+                                );
+                                await _loadTasks();
                               }
                             },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              height: 30,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.red.withOpacity(0.1),
-                                    Colors.red.withOpacity(0.2),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.red,
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.red.withOpacity(0.2),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_month,
-                                    color: Colors.red,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _selectedMonth != null
-                                        ? 'Tháng $_selectedMonth'
-                                        : 'Chọn tháng',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            child: _buildMonthButton(),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -494,145 +208,28 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                             onTap: () async {
                               final selectedYear = await showDialog<int>(
                                 context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: const Text(
-                                        'Chọn năm',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      content: SizedBox(
-                                        width: 300,
-                                        height: 200,
-                                        child: GridView.count(
-                                          crossAxisCount: 4,
-                                          mainAxisSpacing: 8,
-                                          crossAxisSpacing: 8,
-                                          children: List.generate(5, (index) {
-                                            final year =
-                                                DateTime.now().year + index;
-                                            return GestureDetector(
-                                              onTap:
-                                                  () => Navigator.pop(
-                                                    context,
-                                                    year,
-                                                  ),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      year == _selectedYear
-                                                          ? Colors.red
-                                                              .withOpacity(0.2)
-                                                          : Colors.grey
-                                                              .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  border: Border.all(
-                                                    color: Colors.red,
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    '$year',
-                                                    style: const TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontSize: 14,
-                                                      color: Colors.red,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }),
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: const Text(
-                                            'Hủy',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                builder: (context) => _buildYearDialog(),
                               );
                               if (selectedYear != null && mounted) {
                                 setState(() {
                                   _selectedYear = selectedYear;
-                                  _filter =
-                                      TaskFilter.all; // ✅ reset tab về “Tất cả”
+                                  _filter = TaskFilter.all;
                                 });
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  _scrollToSelectedFilter(
-                                    TaskFilter.all,
-                                  ); // ✅ cuộn về tab “Tất cả”
-                                });
-                                await _loadTasks(all: _isCompanyView);
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                  (_) =>
+                                      _scrollToSelectedFilter(TaskFilter.all),
+                                );
+                                await _loadTasks();
                               }
                             },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              height: 30,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.red.withOpacity(0.1),
-                                    Colors.red.withOpacity(0.2),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.red,
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.red.withOpacity(0.2),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today,
-                                    color: Colors.red,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _selectedYear != null
-                                        ? 'Năm $_selectedYear'
-                                        : 'Chọn năm',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            child: _buildYearButton(),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    // 7 TAB THỐNG KÊ - CUỘN NGANG
+
+                    // --- FILTER TRẠNG THÁI ---
                     SizedBox(
                       height: 65,
                       child: SingleChildScrollView(
@@ -710,115 +307,37 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+
+                    // --- 3 NÚT LỌC DỮ LIỆU ---
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // === Nút Phòng tôi ===
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            if (_isCompanyView) {
-                              setState(() => _isCompanyView = false);
-                              await _loadTasks(all: false);
-                              // if (mounted) {
-                              //   ScaffoldMessenger.of(context).showSnackBar(
-                              //     const SnackBar(
-                              //       content: Text("Đang hiển thị: Phòng tôi"),
-                              //     ),
-                              //   );
-                              // }
-                            }
-                          },
-                          icon: Icon(
-                            Icons.group,
-                            color:
-                                _isCompanyView ? Colors.white70 : Colors.white,
-                            size: 18,
-                          ),
-                          label: Text(
-                            "Phòng tôi",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  _isCompanyView
-                                      ? Colors.white70
-                                      : Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                _isCompanyView
-                                    ? Colors.grey.shade700
-                                    : Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            elevation: 0,
-                          ),
+                        _buildViewButton(
+                          "Của tôi",
+                          Icons.person,
+                          ViewMode.my,
+                          Colors.blue,
                         ),
-
                         const SizedBox(width: 10),
-
-                        // === Nút Cơ quan ===
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            if (!_isCompanyView) {
-                              setState(() => _isCompanyView = true);
-                              await _loadTasks(all: true);
-                              // if (mounted) {
-                              //   ScaffoldMessenger.of(context).showSnackBar(
-                              //     const SnackBar(
-                              //       content: Text("Đang hiển thị: Cơ quan"),
-                              //     ),
-                              //   );
-                              // }
-                            }
-                          },
-                          icon: Icon(
-                            Icons.apartment,
-                            color:
-                                _isCompanyView ? Colors.white : Colors.white70,
-                            size: 18,
-                          ),
-                          label: Text(
-                            "Cơ quan",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  _isCompanyView
-                                      ? Colors.white
-                                      : Colors.white70,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                _isCompanyView
-                                    ? Colors.green
-                                    : Colors.grey.shade700,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            elevation: 0,
-                          ),
+                        _buildViewButton(
+                          "Phòng tôi",
+                          Icons.group,
+                          ViewMode.department,
+                          Colors.green,
+                        ),
+                        const SizedBox(width: 10),
+                        _buildViewButton(
+                          "Cơ quan",
+                          Icons.apartment,
+                          ViewMode.company,
+                          Colors.orange,
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-
-              // === PHẦN CUỘN: DANH SÁCH CÔNG VIỆC ===
               Expanded(
                 child:
                     filteredTasks.isEmpty
@@ -841,34 +360,54 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
               ),
             ],
           ),
-
-          // === LOADING OVERLAY ===
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withOpacity(0.4),
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.red),
               ),
             ),
         ],
       ),
-        floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        onPressed: () => showAddTaskSheet(context, _loadTasks), // ← Đúng kiểu
+        onPressed: () => showAddTaskSheet(context, _loadTasks),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Future<void> _openLink(String id) async {
-    final url = "https://work.vtcnews.vn/Task/Details/$id";
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Không thể mở link: $url")));
-    }
+  // ==== Các Widget phụ ====
+
+  Widget _buildViewButton(
+    String text,
+    IconData icon,
+    ViewMode mode,
+    Color color,
+  ) {
+    final bool selected = _viewMode == mode;
+    return ElevatedButton.icon(
+      onPressed: () async {
+        if (_viewMode != mode) {
+          setState(() => _viewMode = mode);
+          await _loadTasks();
+        }
+      },
+      icon: Icon(icon, color: Colors.white, size: 18),
+      label: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: selected ? color : Colors.grey.shade700,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   Widget _buildStatCard(
@@ -877,28 +416,25 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
     Color color,
     TaskFilter filter,
   ) {
-    final bool isSelected = _filter == filter;
-
+    final bool selected = _filter == filter;
     return GestureDetector(
       onTap: () {
-        if (mounted) {
-          setState(() {
-            _filter = filter;
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => _scrollToSelectedFilter(_filter),
-            );
-          });
-        }
+        setState(() {
+          _filter = filter;
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _scrollToSelectedFilter(_filter),
+          );
+        });
       },
       child: Container(
         width: 100,
-        margin: const EdgeInsets.symmetric(horizontal: 0),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
         child: Card(
-          elevation: isSelected ? 3 : 1, // tăng nhẹ độ nổi nếu được chọn
+          elevation: selected ? 3 : 1,
+          color: selected ? Colors.green : Colors.white,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-          color: isSelected ? Colors.green : Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
@@ -909,14 +445,13 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : color,
-                    fontFamily: 'Poppins',
+                    color: selected ? Colors.white : color,
                   ),
                 ),
                 Text(
                   title,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : color,
+                    color: selected ? Colors.white : color,
                     fontSize: 10,
                     fontFamily: 'Poppins',
                   ),
@@ -929,14 +464,152 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
     );
   }
 
+  AlertDialog _buildMonthDialog() {
+    return AlertDialog(
+      title: const Text(
+        'Chọn tháng',
+        style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+      ),
+      content: SizedBox(
+        width: 300,
+        height: 250,
+        child: GridView.count(
+          crossAxisCount: 4,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          children: List.generate(12, (index) {
+            final month = index + 1;
+            return GestureDetector(
+              onTap: () => Navigator.pop(context, month),
+              child: Container(
+                decoration: BoxDecoration(
+                  color:
+                      month == _selectedMonth
+                          ? Colors.red.withOpacity(0.2)
+                          : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red),
+                ),
+                child: Center(
+                  child: Text(
+                    '$month',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    );
+  }
+
+  AlertDialog _buildYearDialog() {
+    return AlertDialog(
+      title: const Text(
+        'Chọn năm',
+        style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+      ),
+      content: SizedBox(
+        width: 300,
+        height: 200,
+        child: GridView.count(
+          crossAxisCount: 4,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          children: List.generate(5, (index) {
+            final year = DateTime.now().year + index;
+            return GestureDetector(
+              onTap: () => Navigator.pop(context, year),
+              child: Container(
+                decoration: BoxDecoration(
+                  color:
+                      year == _selectedYear
+                          ? Colors.red.withOpacity(0.2)
+                          : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red),
+                ),
+                child: Center(
+                  child: Text(
+                    '$year',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonthButton() {
+    return _buildSelectorButton(Icons.calendar_month, 'Tháng $_selectedMonth');
+  }
+
+  Widget _buildYearButton() {
+    return _buildSelectorButton(Icons.calendar_today, 'Năm $_selectedYear');
+  }
+
+  Widget _buildSelectorButton(IconData icon, String text) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 30,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.red.withOpacity(0.1), Colors.red.withOpacity(0.2)],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red, width: 1.5),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.red, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+              fontFamily: 'Poppins',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.task_alt_outlined, size: 60, color: Colors.grey),
-          const SizedBox(height: 10),
-          const Text(
+          Icon(Icons.task_alt_outlined, size: 60, color: Colors.grey),
+          SizedBox(height: 10),
+          Text(
             'Chưa có công việc nào',
             style: TextStyle(
               color: Colors.black54,
@@ -949,7 +622,26 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
       ),
     );
   }
-    // Thêm Công Việc
+
+  Future<void> _openLink(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString("user_email");
+    final password = prefs.getString("user_password");
+
+    final encodedEmail = Uri.encodeComponent(email ?? '');
+    final encodedPassword = Uri.encodeComponent(password ?? '');
+    final url =
+        "https://work.vtcnews.vn/Task/Details/$id?email=$encodedEmail&password=$encodedPassword";
+    print(url);
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Không thể mở link: $url")));
+    }
+  }
+
   void showAddTaskSheet(
     BuildContext context,
     Future<void> Function() onTaskAdded,

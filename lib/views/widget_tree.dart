@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'pages/home_page.dart';
 import '../data/notifiers.dart';
-import 'pages/my_task.dart';
 import 'pages/my_group.dart';
 import 'pages/setting_page.dart';
 // REMOVE the Firebase import as it's no longer needed here
@@ -42,7 +41,6 @@ class _WidgetTreeState extends State<WidgetTree> {
     // The HomePage no longer needs the initialMessage
     _pages = [
       HomePage(),
-      MyTask(),
       MyGroup(),
       TaskStatisticsScreen(),
       SettingPage(),

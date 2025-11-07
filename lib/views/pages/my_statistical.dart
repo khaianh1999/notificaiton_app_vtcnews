@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TaskStatisticsScreen extends StatefulWidget {
@@ -173,17 +174,6 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _openLink(String id) async {
-    final url = "https://work.vtcnews.vn/Task/Details/$id";
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Không thể mở link: $url")));
-    }
   }
 
   /// 📊 Xây dựng 1 dòng thống kê (label + icon + số lượng)

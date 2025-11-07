@@ -35,7 +35,6 @@ class NewsImageCache {
 
 /// Model cho notification item
 
-
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin<HomePage> {
   static const _red = Color(0xFFA2171C);
@@ -45,6 +44,7 @@ class _HomePageState extends State<HomePage>
   String? _savedEmail;
   String? _savedPassword;
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
 
   // Danh sách thông báo
   List<NotificationItem> _notifications = [];
@@ -81,7 +81,11 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  Future<void> _saveEmail(String email,String password, int departmentId) async {
+  Future<void> _saveEmail(
+    String email,
+    String password,
+    int departmentId,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user_email", email);
     await prefs.setInt("departmentId", departmentId);
@@ -102,26 +106,29 @@ class _HomePageState extends State<HomePage>
       return;
     }
     if (password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Vui lòng nhập mật khẩu")),
-    );
-    return;
-  }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Vui lòng nhập mật khẩu")));
+      return;
+    }
 
     setState(() => _isSubmitting = true);
     try {
-      final data = await NotificationService.instance.sendTokenToServer(email,password);
-
+      print(email);
+      print(password);
+      final data = await NotificationService.instance.sendTokenToServer(
+        email,
+        password,
+      );
+      print(data);
       if (data != null && data["success"] == true) {
-        await _saveEmail(email,password, data["departmentId"]);
+        await _saveEmail(email, password, data["departmentId"]);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Cập nhật token thành công!")),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("❌ Email hoặc mật khẩu không đúng!"),
-          ),
+          const SnackBar(content: Text("❌ Email hoặc mật khẩu không đúng!")),
         );
       }
     } catch (e) {
@@ -179,7 +186,16 @@ class _HomePageState extends State<HomePage>
 
   /// Hàm mở link bằng trình duyệt
   Future<void> _openLink(String link) async {
-    final url = "https://work.vtcnews.vn$link";
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString("user_email");
+    final password = prefs.getString("user_password");
+
+    final encodedEmail = Uri.encodeComponent(email ?? '');
+    final encodedPassword = Uri.encodeComponent(password ?? '');
+    // URL có chứa email và password
+    final url =
+        "https://work.vtcnews.vn$link?email=$encodedEmail&password=$encodedPassword";
+    print(url);
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } else {
@@ -252,9 +268,22 @@ class _HomePageState extends State<HomePage>
         const SizedBox(height: 10),
         TextField(
           controller: _passwordlController,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: "Nhập Mật khẩu của bạn",
+          obscureText: _obscurePassword, // 👈 ẩn ký tự
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hintText: "Nhập mật khẩu của bạn",
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword =
+                      !_obscurePassword; // 👈 đổi trạng thái ẩn/hiện
+                });
+              },
+            ),
           ),
         ),
         const SizedBox(height: 10),
