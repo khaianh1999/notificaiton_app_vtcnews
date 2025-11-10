@@ -80,84 +80,100 @@ class NotificationService {
   }
 
   Future<void> bindMessageHandlers() async {
-  // App đang foreground
-  FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
-    print("📥 Foreground message received: ${msg.data}");
-    
-    // Lấy title + body ưu tiên msg.notification, fallback msg.data
-    final title = msg.notification?.title ?? msg.data['title']?.toString() ?? 'Thông báo';
-    final body = msg.notification?.body ?? msg.data['body']?.toString() ?? '';
+    // App đang foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
+      print("📥 Foreground message received: ${msg.data}");
 
-    if (title.isNotEmpty && body.isNotEmpty) {
-      await _fln.show(
-        DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title,
-        body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            highChannel.id,
-            highChannel.name,
-            channelDescription: highChannel.description,
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@drawable/ic_stat_notification',
+      // Lấy title + body ưu tiên msg.notification, fallback msg.data
+      final title =
+          msg.notification?.title ??
+          msg.data['title']?.toString() ??
+          'Thông báo';
+      final body = msg.notification?.body ?? msg.data['body']?.toString() ?? '';
+
+      if (title.isNotEmpty && body.isNotEmpty) {
+        await _fln.show(
+          DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title,
+          body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              highChannel.id,
+              highChannel.name,
+              channelDescription: highChannel.description,
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@drawable/ic_stat_notification',
+            ),
+            iOS: const DarwinNotificationDetails(),
           ),
-          iOS: const DarwinNotificationDetails(),
-        ),
-        payload: jsonEncode(msg.data),
-      );
-    } else {
-      print("⚠️ Không có title/body, notification không được show");
-    }
-  });
+          payload: jsonEncode(msg.data),
+        );
+      } else {
+        print("⚠️ Không có title/body, notification không được show");
+      }
+    });
 
-  // Khi user tap thông báo (background hoặc terminated)
-  FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    print("📬 onMessageOpenedApp: ${message.data}");
-    navigateToArticleDetail(message.data);
-  });
-}
-
+    // Khi user tap thông báo (background hoặc terminated)
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      print("📬 onMessageOpenedApp: ${message.data}");
+      navigateToArticleDetail(message.data);
+    });
+  }
 
   void navigateToArticleDetail(Map<String, dynamic> data) async {
-  print("➡️ Navigating with data: $data");
+    print("➡️ Navigating with data: $data");
 
-  if (data.containsKey('link')) {
-    final link = data['link']?.toString() ?? '';
-    if (link.isEmpty) {
-      print("⚠️ data['link'] rỗng");
+    // Kiểm tra dữ liệu
+    if (!data.containsKey('link')) {
+      print("⚠️ Không có key 'link' trong data");
+      return;
+    }
+
+    final rawLink = data['link']?.toString() ?? '';
+    if (rawLink.isEmpty) {
+      print("⚠️ Link rỗng");
       return;
     }
 
     try {
-      // Lấy email & password từ SharedPreferences
+      // Lấy email và password lưu trong SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString("user_email") ?? "";
-      final password = prefs.getString("user_password") ?? "";
+      final email = prefs.getString("user_email") ?? '';
+      final password = prefs.getString("user_password") ?? '';
 
-      // Encode để tránh lỗi ký tự đặc biệt
-      final encodedEmail = Uri.encodeComponent(email);
-      final encodedPassword = Uri.encodeComponent(password);
+      // ✅ Mã hóa Base64 URL Safe
+      final credentials = "$email:$password";
+      final encodedData = base64Url.encode(utf8.encode(credentials));
 
-      // Ghép URL hoàn chỉnh
-      final fullUrl = "$link?email=$encodedEmail&password=$encodedPassword";
-      final uri = Uri.parse(fullUrl);
+      // ✅ Tạo URL gốc (chuẩn hóa để tránh lỗi 10229)
+      final link =
+          rawLink.startsWith('http')
+              ? rawLink
+              : 'https://work.vtcnews.vn$rawLink';
 
-      print("🌐 Opening URL: $fullUrl");
+      // ✅ Ghép query param data
+      Uri uri;
+      uri = Uri.parse('$link?data=$encodedData');
 
-      // Mở link trong trình duyệt ngoài
-      final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      print("🔗 Final URL: $uri");
 
-      if (!success) {
-        print("❌ Không thể mở link: $fullUrl");
+      // ✅ Kiểm tra và mở liên kết
+      if (await canLaunchUrl(uri)) {
+        final success = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!success) {
+          await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+        }
+      } else {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
       }
     } catch (e) {
-      print("❌ Lỗi khi mở link có xác thực: $e");
+      print("❌ Lỗi khi mở link: $e");
     }
-  } else {
-    print("⚠️ Không có trường 'link' trong data");
   }
-}
 
   // Các hàm còn lại giữ nguyên
   Future<String?> getToken() => FirebaseMessaging.instance.getToken();
@@ -165,7 +181,10 @@ class NotificationService {
     FirebaseMessaging.instance.onTokenRefresh.listen(onRefresh);
   }
 
-  Future<Map<String, dynamic>?> sendTokenToServer(String email,String password) async {
+  Future<Map<String, dynamic>?> sendTokenToServer(
+    String email,
+    String password,
+  ) async {
     try {
       final fcmToken = await FirebaseMessaging.instance.getToken();
 
@@ -180,7 +199,7 @@ class NotificationService {
 
       final url = Uri.parse("https://work.vtcnews.vn/User/UpdateTokenDevice");
 
-      final body = {"email": email, "token": fcmToken, "password":password};
+      final body = {"email": email, "token": fcmToken, "password": password};
 
       final res = await http.post(
         url,
@@ -207,6 +226,4 @@ class NotificationService {
       return null;
     }
   }
-
 }
-

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:notification_vtcnews/data/models/home_model.dart';
+import 'package:notification_vtcnews/views/widgets/encryption_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -186,22 +187,36 @@ class _HomePageState extends State<HomePage>
 
   /// Hàm mở link bằng trình duyệt
   Future<void> _openLink(String link) async {
-    final prefs = await SharedPreferences.getInstance();
-    final email = prefs.getString("user_email");
-    final password = prefs.getString("user_password");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString("user_email") ?? '';
+      final password = prefs.getString("user_password") ?? '';
+      print("🔗 Final password: $password");
+      // ✅ Mã hóa email + password (base64 URL-safe)
+      final encrypted = EncryptionHelper.encodeCredentials(email, password);
+      final encodedData = Uri.encodeComponent(encrypted['vtcnews'] ?? '');
 
-    final encodedEmail = Uri.encodeComponent(email ?? '');
-    final encodedPassword = Uri.encodeComponent(password ?? '');
-    // URL có chứa email và password
-    final url =
-        "https://work.vtcnews.vn$link?email=$encodedEmail&password=$encodedPassword";
-    print(url);
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Không thể mở link: $url")));
+      // ✅ Tạo URL login có redirect và data
+      final uri = Uri.parse(
+        "https://work.vtcnews.vn$link?data=$encodedData",
+      );
+
+      print("🔗 Final URL: $uri");
+
+      // ✅ Mở URL
+      if (await canLaunchUrl(uri)) {
+        final success = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!success) {
+          await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+        }
+      } else {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      }
+    } catch (e) {
+      print("❌ Lỗi khi mở link: $e");
     }
   }
 

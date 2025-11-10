@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:notification_vtcnews/data/models/task_mode.dart';
 import 'package:notification_vtcnews/views/widgets/add_job_detail.dart';
+import 'package:notification_vtcnews/views/widgets/encryption_helper.dart';
 import 'package:notification_vtcnews/views/widgets/task_detaildialong.dart';
 import 'package:notification_vtcnews/views/widgets/task_item_widget.dart';
 import 'package:notification_vtcnews/data/repositories/add_task.dart';
@@ -624,21 +625,36 @@ class _MyGroupState extends State<MyGroup> with TickerProviderStateMixin {
   }
 
   Future<void> _openLink(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final email = prefs.getString("user_email");
-    final password = prefs.getString("user_password");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString("user_email") ?? '';
+      final password = prefs.getString("user_password") ?? '';
 
-    final encodedEmail = Uri.encodeComponent(email ?? '');
-    final encodedPassword = Uri.encodeComponent(password ?? '');
-    final url =
-        "https://work.vtcnews.vn/Task/Details/$id?email=$encodedEmail&password=$encodedPassword";
-    print(url);
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Không thể mở link: $url")));
+      // ✅ Mã hóa email + password (base64 URL-safe)
+      final encrypted = EncryptionHelper.encodeCredentials(email, password);
+      final encodedData = Uri.encodeComponent(encrypted['vtcnews'] ?? '');
+
+      // ✅ Tạo URL login có redirect và data
+      final uri = Uri.parse(
+        "https://work.vtcnews.vn/Task/Details/$id?data=$encodedData",
+      );
+
+      print("🔗 Final URL: $uri");
+
+      // ✅ Mở URL
+      if (await canLaunchUrl(uri)) {
+        final success = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!success) {
+          await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+        }
+      } else {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      }
+    } catch (e) {
+      print("❌ Lỗi khi mở link: $e");
     }
   }
 
