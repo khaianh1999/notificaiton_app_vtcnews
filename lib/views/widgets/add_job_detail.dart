@@ -195,13 +195,8 @@ class _AddTaskFormState extends State<AddTaskForm> {
 
   @override
   Widget build(BuildContext context) {
-    const statusLabels = [
-      'Chờ',
-      'Đang làm',
-      'Đã làm',
-      'Kiểm thử',
-    ];
-    const statusValues = [1, 2, 3, 4, 5, 6, 7];
+    const statusLabels = ['Chờ', 'Đang làm', 'Đã làm', 'Kiểm thử'];
+    const statusValues = [0, 1, 2, 3];
 
     // 👇 Bọc toàn bộ trong GestureDetector để bấm ra ngoài input ẩn bàn phím
     return GestureDetector(
