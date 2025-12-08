@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:notification_vtcnews/views/pages/statistical_detail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -118,60 +119,76 @@ class _TaskStatisticsScreenState extends State<TaskStatisticsScreen> {
     final int reject = dept["reject"] ?? 0;
     final int pending = dept["pending"] ?? 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12), // bo tròn góc
-        boxShadow: [
-          // đổ bóng nhẹ cho đẹp
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: const Offset(2, 3),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => DepartmentTaskList(
+                  departmentId: dept["DepartmentId"],
+                  departmentName: dept["DepartmentName"],
+                  month: _selectedMonth,
+                  year: _selectedYear,
+                ),
           ),
-        ],
-      ),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tên phòng ban
-          SizedBox(
-            height: 20 * 1.2 * 2, // fontSize * lineHeight * số dòng
-            child: Text(
-              name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.red,
-                height: 1.2,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12), // bo tròn góc
+          boxShadow: [
+            // đổ bóng nhẹ cho đẹp
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 5,
+              offset: const Offset(2, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tên phòng ban
+            SizedBox(
+              height: 20 * 1.2 * 2, // fontSize * lineHeight * số dòng
+              child: Text(
+                name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.red,
+                  height: 1.2,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 6),
+            const SizedBox(height: 6),
 
-          // Các dòng thống kê chi tiết
-          _buildStatLine("Tổng", total, Icons.all_inclusive, Colors.black87),
-          _buildStatLine("Chờ", todo, Icons.hourglass_empty, Colors.grey),
-          _buildStatLine("Đang làm", inProgress, Icons.work, Colors.blue),
-          _buildStatLine("Đã làm xong", done, Icons.done, Colors.green),
-          _buildStatLine("Kiểm thử", test, Icons.bug_report, Colors.purple),
-          _buildStatLine(
-            "Hoàn thành",
-            completed,
-            Icons.check_circle,
-            Colors.teal,
-          ),
-          _buildStatLine("Từ chối", reject, Icons.cancel, Colors.red),
-          _buildStatLine(
-            "Tạm dừng",
-            pending,
-            Icons.pause_circle,
-            Colors.orange,
-          ),
-        ],
+            // Các dòng thống kê chi tiết
+            _buildStatLine("Tổng", total, Icons.all_inclusive, Colors.black87),
+            _buildStatLine("Chờ", todo, Icons.hourglass_empty, Colors.grey),
+            _buildStatLine("Đang làm", inProgress, Icons.work, Colors.blue),
+            _buildStatLine("Đã làm xong", done, Icons.done, Colors.green),
+            _buildStatLine("Kiểm thử", test, Icons.bug_report, Colors.purple),
+            _buildStatLine(
+              "Hoàn thành",
+              completed,
+              Icons.check_circle,
+              Colors.teal,
+            ),
+            _buildStatLine("Từ chối", reject, Icons.cancel, Colors.red),
+            _buildStatLine(
+              "Tạm dừng",
+              pending,
+              Icons.pause_circle,
+              Colors.orange,
+            ),
+          ],
+        ),
       ),
     );
   }
